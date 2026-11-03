@@ -39,7 +39,7 @@ export default function HomePage() {
           <h1 className="font-display text-4xl sm:text-5xl md:text-7xl text-white mb-6 md:mb-8 drop-shadow-lg max-w-3xl leading-tight">
             Furniture for living.
           </h1>
-          <a href="/collections" className="btn-outline px-8 md:px-10 py-3 md:py-4 text-[10px] md:text-xs font-bold tracking-widest uppercase bg-transparent">
+          <a href="/shop" className="btn-outline px-8 md:px-10 py-3 md:py-4 text-[10px] md:text-xs font-bold tracking-widest uppercase bg-transparent">
             Shop The Collection
           </a>
         </div>
@@ -62,7 +62,7 @@ export default function HomePage() {
             </h2>
             
             <p className="text-lg md:text-2xl text-[var(--brand-cream)] font-medium mb-8 md:mb-10">
-              Celebrate with us â€” Enjoy Up to <span className="text-[var(--brand-gold)] font-bold">15% OFF</span>
+              Celebrate with us Ã¢â‚¬â€ Enjoy Up to <span className="text-[var(--brand-gold)] font-bold">15% OFF</span>
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-8 md:mb-10">
@@ -77,7 +77,7 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-              <a href="/collections/anniversary" className="bg-[var(--brand-gold)] text-[var(--brand-maroon-dark)] px-6 md:px-8 py-3 md:py-4 text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-[var(--brand-gold-light)] transition shadow-lg text-center">
+              <a href="/shop" className="bg-[var(--brand-gold)] text-[var(--brand-maroon-dark)] px-6 md:px-8 py-3 md:py-4 text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-[var(--brand-gold-light)] transition shadow-lg text-center">
                 Shop Anniversary Offers
               </a>
               <a href="/showrooms" className="border border-white text-white px-6 md:px-8 py-3 md:py-4 text-[10px] md:text-xs font-bold tracking-wider uppercase hover:bg-white hover:text-[var(--brand-maroon)] transition text-center">
@@ -136,7 +136,7 @@ export default function HomePage() {
             {categories.map((cat) => (
               <a 
                 key={cat.name} 
-                href={`/collections/${cat.name.toLowerCase().replace(' ', '-')}`} 
+                href={cat.name === "Dressing Table" ? "/collections/bedroom" : `/collections/${cat.name.toLowerCase().replace(' ', '-')}`} 
                 className={`group relative overflow-hidden bg-gray-100 img-hover-zoom ${cat.gridClass}`}
               >
                 <img 
@@ -176,7 +176,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {products.map((prod, idx) => (
-              <a href="/product" key={idx} className="group cursor-pointer block">
+              <a href="/shop" key={idx} className="group cursor-pointer block">
                 <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden mb-4">
                   <img 
                     src={prod.image} 

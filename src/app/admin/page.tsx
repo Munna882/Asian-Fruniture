@@ -1,10 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+﻿import { prisma } from "@/lib/prisma";
 import { formatDistanceToNow } from "date-fns";
 
-const prisma = new PrismaClient();
-
 export default async function AdminDashboard() {
-  // Fetch real data from the database (G2-A Requirement)
+  // Fetch real data from the database
   const totalProducts = await prisma.product.count();
   const totalOrders = await prisma.order.count();
   const totalUsers = await prisma.user.count();

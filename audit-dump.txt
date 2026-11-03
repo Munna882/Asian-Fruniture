@@ -1,0 +1,6 @@
+﻿# Audit dump generated: 2026-11-03 22:38:03
+# Project root: C:\Users\USER\Projects\asian-furniture
+
+================================================================================
+== FILE INVENTORY (excluding node_modules, .next, .git)
+================================================================================

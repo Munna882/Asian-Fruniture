@@ -163,7 +163,7 @@ export default function CheckoutPage() {
                         <p className="text-xs text-[var(--brand-muted)] mt-1">Qty: {item.quantity}</p>
                       </div>
                       <div className="text-sm font-semibold text-[var(--brand-text)]">
-                        ৳ {(item.price * item.quantity).toLocaleString('en-US')}
+                        à§³ {(item.price * item.quantity).toLocaleString('en-US')}
                       </div>
                     </div>
                   ))}
@@ -179,11 +179,11 @@ export default function CheckoutPage() {
                 <div className="space-y-3 text-sm border-b border-[var(--brand-border)] pb-6 mb-6">
                   <div className="flex justify-between text-[var(--brand-muted)]">
                     <span>Subtotal</span>
-                    <span className="font-medium text-[var(--brand-text)]">৳ {subtotal.toLocaleString('en-US')}</span>
+                    <span className="font-medium text-[var(--brand-text)]">à§³ {subtotal.toLocaleString('en-US')}</span>
                   </div>
                   <div className="flex justify-between text-[var(--brand-muted)]">
                     <span>Delivery</span>
-                    <span className="font-medium text-[var(--brand-text)]">৳ {delivery.toLocaleString('en-US')}</span>
+                    <span className="font-medium text-[var(--brand-text)]">à§³ {delivery.toLocaleString('en-US')}</span>
                   </div>
                 </div>
 
@@ -192,7 +192,7 @@ export default function CheckoutPage() {
                   <span className="text-base font-bold text-[var(--brand-text)] uppercase tracking-wider">Total</span>
                   <div className="text-right">
                     <span className="text-[10px] text-[var(--brand-muted)] block mb-1">Including VAT</span>
-                    <span className="text-3xl font-bold text-[var(--brand-maroon)]">৳ {total.toLocaleString('en-US')}</span>
+                    <span className="text-3xl font-bold text-[var(--brand-maroon)]">à§³ {total.toLocaleString('en-US')}</span>
                   </div>
                 </div>
 

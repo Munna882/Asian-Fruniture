@@ -1,13 +1,12 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+﻿import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 export default async function AdminProductsPage() {
-  // Fetch products from the database, including their category and variants
   const products = await prisma.product.findMany({
     include: {
       category: true,
       variants: true,
+      images: true, // FIXED: Include images array
     },
     orderBy: { createdAt: "desc" },
   });
@@ -21,9 +20,9 @@ export default async function AdminProductsPage() {
           <h2 className="text-2xl font-display font-bold text-gray-900">Catalogue</h2>
           <p className="text-sm text-gray-500 mt-1">Manage your furniture products, prices, and inventory.</p>
         </div>
-        <button className="bg-[var(--brand-maroon)] text-white px-6 py-2.5 text-sm font-bold uppercase tracking-wider hover:bg-[var(--brand-maroon-dark)] transition-colors shadow-sm">
+        <Link href="/admin/products/new" className="bg-[var(--brand-maroon)] text-white px-6 py-2.5 text-sm font-bold uppercase tracking-wider hover:bg-[var(--brand-maroon-dark)] transition-colors shadow-sm inline-block">
           + Add New Product
-        </button>
+        </Link>
       </div>
 
       {/* Product Table */}
@@ -49,17 +48,25 @@ export default async function AdminProductsPage() {
                 </tr>
               ) : (
                 products.map((product) => {
-                  // Assuming a product has at least one variant (base price)
                   const baseVariant = product.variants[0];
-                  // Convert BigInt poisha to BDT
                   const priceBdt = baseVariant ? (Number(baseVariant.price) / 100).toLocaleString('en-US') : 'N/A';
                   const totalStock = product.variants.reduce((acc, v) => acc + v.stock, 0);
+                  
+                  // FIXED: Read from images array instead of imageUrl
+                  const primaryImage = product.images[0]?.url;
 
                   return (
                     <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-4">
-                        <div className="font-semibold text-gray-900">{product.name}</div>
-                        <div className="text-xs text-gray-500 truncate max-w-[200px]">{product.description}</div>
+                      <td className="p-4 flex items-center gap-4">
+                        {primaryImage ? (
+                          <img src={primaryImage} alt={product.name} className="w-12 h-12 object-cover border border-gray-200" />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-100 border border-gray-200 flex items-center justify-center text-[10px] text-gray-400">No Img</div>
+                        )}
+                        <div>
+                          <div className="font-semibold text-gray-900">{product.name}</div>
+                          <div className="text-xs text-gray-500 truncate max-w-[200px]">{product.description}</div>
+                        </div>
                       </td>
                       <td className="p-4 text-sm text-gray-600">
                         <span className="bg-gray-100 px-2 py-1 rounded-sm text-xs font-medium">

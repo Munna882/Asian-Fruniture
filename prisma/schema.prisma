@@ -52,7 +52,16 @@ model Product {
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   variants    ProductVariant[]
+  images      ProductImage[]
   createdAt   DateTime @default(now())
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  url       String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
 
 model ProductVariant {
@@ -84,7 +93,6 @@ model Payment {
   isPrimary        Boolean       @default(false)
   createdAt        DateTime      @default(now())
 
-  // G2-A Rule: Primary payment uniqueness per order
   @@unique([orderId, isPrimary], name: "unique_primary_payment", map: "unique_primary_payment")
 }
 
