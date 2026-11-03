@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleType {
+  SUPER_ADMIN
+  FINANCE_MANAGER
+  PRODUCTION_MANAGER
+  SHOWROOM_MANAGER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      RoleType @default(SHOWROOM_MANAGER)
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  variants    ProductVariant[]
+  createdAt   DateTime @default(now())
+}
+
+model ProductVariant {
+  id        String  @id @default(uuid())
+  productId String
+  sku       String  @unique
+  price     BigInt  // G2-A Rule: BIGINT integer poisha
+  stock     Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  total     BigInt      // G2-A Rule: BIGINT integer poisha
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  payments  Payment[]
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  orderId          String
+  order            Order         @relation(fields: [orderId], references: [id])
+  amount           BigInt        // G2-A Rule: BIGINT integer poisha
+  status           PaymentStatus @default(PENDING)
+  idempotencyKey   String        @unique // G2-A Rule: Idempotency
+  isPrimary        Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+
+  // G2-A Rule: Primary payment uniqueness per order
+  @@unique([orderId, isPrimary], name: "unique_primary_payment", map: "unique_primary_payment")
+}
+
+model IdempotencyRecord {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  createdAt DateTime @default(now())
+}

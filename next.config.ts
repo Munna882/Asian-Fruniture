@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    root: process.cwd(),
+  },
+  // Required for Prisma with Next.js Server Components
+  serverExternalPackages: ["@prisma/client", "prisma", "bcrypt"],
 };
 
 export default nextConfig;

@@ -1,26 +1,101 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand-maroon: #5E1914;        
+  --brand-maroon-dark: #45110D;
+  --brand-green: #1B5E3A;         
+  --brand-gold: #C5A059;          
+  --brand-white: #FFFFFF;
+  --brand-cream: #F9F8F6;         
+  --brand-surface: #EFECE6;       
+  --brand-text: #1A1A1A;          
+  --brand-muted: #666666;         
+  --brand-border: #E5E5E5;        
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--brand-white);
+  color: var(--brand-text);
+  font-family: var(--font-inter, ui-sans-serif, system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* TYPOGRAPHY RHYTHM */
+.font-display {
+  font-family: var(--font-fraunces, ui-serif, Georgia, serif);
+  letter-spacing: -0.01em;
+  line-height: 1.15; /* Tighter line height for large headings */
+}
+
+h1, h2, h3, h4 {
+  text-wrap: balance; /* Prevents orphans in headings */
+}
+
+p {
+  line-height: 1.6; /* Better readability for body text */
+}
+
+/* ARCHITECTURAL BUTTONS (Sharp edges, smooth transitions) */
+.btn-primary {
+  background-color: var(--brand-maroon);
+  color: white;
+  border-radius: 0; /* Sharp edges */
+  transition: all 0.3s ease;
+  border: 1px solid var(--brand-maroon);
+}
+.btn-primary:hover {
+  background-color: var(--brand-maroon-dark);
+  border-color: var(--brand-maroon-dark);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--brand-text);
+  border-radius: 0;
+  border: 1px solid var(--brand-text);
+  transition: all 0.3s ease;
+}
+.btn-outline:hover {
+  background-color: var(--brand-text);
+  color: white;
+}
+
+/* IMAGE HOVER EFFECT */
+.img-hover-zoom {
+  overflow: hidden;
+}
+.img-hover-zoom img {
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.img-hover-zoom:hover img {
+  transform: scale(1.04);
+}
+
+/* GLOBAL SECTION PADDING */
+.section-padding {
+  padding-top: 6rem;    /* 96px */
+  padding-bottom: 6rem; /* 96px */
+}
+@media (min-width: 768px) {
+  .section-padding {
+    padding-top: 8rem;    /* 128px */
+    padding-bottom: 8rem; /* 128px */
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* CUSTOM SCROLLBAR */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--brand-cream);
+}
+::-webkit-scrollbar-thumb {
+  background: #CCCCCC;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-maroon);
 }
