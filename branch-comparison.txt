@@ -1,0 +1,37 @@
+=== BRANCH COMPARISON ===
+Generated: 2026-11-04 23:09:17
+
+origin/main HEAD:            7b15e625f1006c75479686462c8392f683b437af
+phase-d-v3-evidence HEAD:    56bcef33a2f20b193c306e0ca03361ff4275df87
+
+SOURCE COMMIT (tested code):   a60ed43824d60cb641a25582fc786e6c812b2f9e
+EVIDENCE COMMIT (artifacts):   56bcef33a2f20b193c306e0ca03361ff4275df87
+
+--- Commits ahead of origin/main (all work is here, not on main) ---
+56bcef3 Round 1 evidence refresh: embeds source a60ed43, 20/20 passed
+a60ed43 Round 1 fixes: staging host allowlist, concurrency assertions, fixed schema capture, tx handling in CONC tests
+42e627c Ignore legacy scratch files
+ce7455b Add pg dependency for evidence runner
+777c6db Phase D V3 evidence: unfiltered output + full trigger functions + complete schema export for source 1623bce87613471ec42b928553dc6303144a8c29
+1623bce Phase D V3: PM corrections - commitAttempted tracking, full trigger function bodies, complete schema export
+
+--- Confirmation: main has NOT been modified by this work ---
+The commits listed above exist on phase-d-v3-evidence only.
+origin/main HEAD (7b15e625f1006c75479686462c8392f683b437af) is unchanged since 7b15e62 baseline.
+No merges from phase-d-v3-evidence into main have occurred.
+
+--- Diff stat between main and this branch ---
+.gitignore                  |   5 +-
+ capture-schema.js           | 114 ++++++++++
+ capture-triggers.js         |  30 +++
+ package-lock.json           | 430 +++++++++++++++++++++++++++++++++++++
+ package.json                |   3 +
+ raw-run-output.txt          | Bin 0 -> 7260 bytes
+ run-evidence-v3.js          | 311 ++++++++++++++++-----------
+ schema-export.txt           | 507 ++++++++++++++++++++++++++++++++++++++++++++
+ staging-evidence-v3.txt     |  73 +++----
+ terminal-migrate-deploy.txt | Bin 0 -> 598 bytes
+ terminal-migrate-status.txt | Bin 0 -> 592 bytes
+ terminal-validate.txt       | Bin 0 -> 278 bytes
+ trigger-inventory.txt       | 275 ++++++++++++++++++++++++
+ 13 files changed, 1592 insertions(+), 156 deletions(-)
