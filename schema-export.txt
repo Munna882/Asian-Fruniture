@@ -1,0 +1,507 @@
+=== SCHEMA EXPORT ===
+Captured: 2026-11-04T17:06:01.010Z
+
+## TABLES AND COLUMNS (31)
+
+### BillOfMaterials
+  id : text NOT NULL
+  productId : text NOT NULL
+  rawMaterialId : text NOT NULL
+  quantityRequired : integer NOT NULL
+  version : integer NOT NULL DEFAULT 1
+  isActive : boolean NOT NULL DEFAULT true
+
+### Category
+  id : text NOT NULL
+  name : text NOT NULL
+
+### CustomerAddress
+  id : text NOT NULL
+  userId : text NOT NULL
+  label : text NOT NULL
+  address : text NOT NULL
+  city : text NOT NULL
+  district : text NOT NULL
+  phone : text NOT NULL
+  isDefault : boolean NOT NULL DEFAULT false
+
+### Delivery
+  id : text NOT NULL
+  fulfillmentGroupId : text NOT NULL
+  status : "DeliveryStatus" NOT NULL DEFAULT 'PENDING'::"DeliveryStatus"
+  trackingNumber : text
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### DeliveryQuote
+  id : text NOT NULL
+  fulfillmentGroupId : text NOT NULL
+  version : integer NOT NULL DEFAULT 1
+  amount : bigint NOT NULL
+  status : "DeliveryQuoteStatus" NOT NULL DEFAULT 'PENDING'::"DeliveryQuoteStatus"
+  approvedById : text
+  approvedAt : timestamp(3) without time zone
+  rejectedReason : text
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### DeliveryQuoteHistory
+  id : text NOT NULL
+  quoteId : text NOT NULL
+  status : "DeliveryQuoteStatus" NOT NULL
+  rejectionReason : text
+  changedById : text NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### FinancialLedger
+  id : text NOT NULL
+  orderId : text NOT NULL
+  type : "LedgerTransactionType" NOT NULL
+  amount : bigint NOT NULL
+  reference : text NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### FulfillmentGroup
+  id : text NOT NULL
+  orderId : text NOT NULL
+  type : "FulfillmentType" NOT NULL
+  status : "FulfillmentStatus" NOT NULL DEFAULT 'PENDING'::"FulfillmentStatus"
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### IdempotencyRecord
+  id : text NOT NULL
+  key : text NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### InventoryStock
+  id : text NOT NULL
+  variantId : text NOT NULL
+  locationId : text NOT NULL
+  quantityOnHand : integer NOT NULL DEFAULT 0
+  quantityReserved : integer NOT NULL DEFAULT 0
+
+### Location
+  id : text NOT NULL
+  name : text NOT NULL
+  type : "LocationType" NOT NULL
+  address : text
+
+### Order
+  id : text NOT NULL
+  userId : text NOT NULL
+  total : bigint NOT NULL DEFAULT 0
+  status : "OrderStatus" NOT NULL DEFAULT 'PENDING'::"OrderStatus"
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### OrderItem
+  id : text NOT NULL
+  orderId : text NOT NULL
+  variantId : text NOT NULL
+  quantity : integer NOT NULL
+  priceAtOrder : bigint NOT NULL
+  nameAtOrder : text NOT NULL
+  skuAtOrder : text NOT NULL
+  fulfillmentGroupId : text NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### Payment
+  id : text NOT NULL
+  orderId : text NOT NULL
+  amount : bigint NOT NULL
+  status : "PaymentStatus" NOT NULL DEFAULT 'PENDING'::"PaymentStatus"
+  idempotencyKey : text NOT NULL
+  isPrimary : boolean NOT NULL DEFAULT false
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### PaymentAllocation
+  id : text NOT NULL
+  ledgerId : text NOT NULL
+  obligationId : text NOT NULL
+  orderId : text NOT NULL
+  amount : bigint NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### PaymentObligation
+  id : text NOT NULL
+  orderId : text NOT NULL
+  fulfillmentGroupId : text NOT NULL
+  type : "ObligationType" NOT NULL
+  amount : bigint NOT NULL
+  status : "ObligationStatus" NOT NULL DEFAULT 'PENDING'::"ObligationStatus"
+  deliveryQuoteId : text
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### Product
+  id : text NOT NULL
+  name : text NOT NULL
+  description : text
+  categoryId : text NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+  status : "ProductStatus" NOT NULL DEFAULT 'DRAFT'::"ProductStatus"
+
+### ProductImage
+  id : text NOT NULL
+  url : text NOT NULL
+  productId : text NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+  isPrimary : boolean NOT NULL DEFAULT false
+  sortOrder : integer NOT NULL DEFAULT 0
+
+### ProductVariant
+  id : text NOT NULL
+  productId : text NOT NULL
+  sku : text NOT NULL
+  price : bigint NOT NULL
+  stock : integer NOT NULL DEFAULT 0
+
+### ProductionJob
+  id : text NOT NULL
+  orderItemId : text NOT NULL
+  status : "ProductionStatus" NOT NULL DEFAULT 'PENDING'::"ProductionStatus"
+  bomSnapshot : jsonb NOT NULL
+  assignedToId : text
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### ProductionQcHistory
+  id : text NOT NULL
+  productionJobId : text NOT NULL
+  status : "QCStatus" NOT NULL
+  rejectionReason : text
+  changedById : text NOT NULL
+  sequenceNumber : integer NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### ProductionStatusHistory
+  id : text NOT NULL
+  productionJobId : text NOT NULL
+  status : "ProductionStatus" NOT NULL
+  changedById : text NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### RawMaterial
+  id : text NOT NULL
+  name : text NOT NULL
+  unit : text NOT NULL
+
+### RawMaterialLedger
+  id : text NOT NULL
+  rawMaterialId : text NOT NULL
+  locationId : text NOT NULL
+  type : "RawMaterialMovementType" NOT NULL
+  quantity : integer NOT NULL
+  productionJobId : text
+  reversesId : text
+  reference : text
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+  approvedById : text
+  reason : text
+
+### RawMaterialStock
+  id : text NOT NULL
+  rawMaterialId : text NOT NULL
+  locationId : text NOT NULL
+  quantityOnHand : integer NOT NULL DEFAULT 0
+
+### RefundAllocation
+  id : text NOT NULL
+  refundRequestId : text NOT NULL
+  originalLedgerId : text NOT NULL
+  originalAllocationId : text NOT NULL
+  amount : bigint NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### RefundRequest
+  id : text NOT NULL
+  originalLedgerId : text NOT NULL
+  amount : bigint NOT NULL
+  reason : text NOT NULL
+  status : "RefundStatus" NOT NULL DEFAULT 'PENDING'::"RefundStatus"
+  processedLedgerId : text
+  approvedById : text
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### StockLedger
+  id : text NOT NULL
+  variantId : text NOT NULL
+  locationId : text NOT NULL
+  orderItemId : text
+  transferGroupId : text
+  type : "StockMovementType" NOT NULL
+  quantity : integer NOT NULL
+  status : "StockLedgerStatus" NOT NULL DEFAULT 'ACTIVE'::"StockLedgerStatus"
+  reference : text NOT NULL
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+### SystemConfig
+  id : text NOT NULL
+  key : text NOT NULL
+  value : text NOT NULL
+  description : text
+  updatedAt : timestamp(3) without time zone NOT NULL
+
+### User
+  id : text NOT NULL
+  email : text NOT NULL
+  password : text NOT NULL
+  name : text NOT NULL
+  role : "RoleType" NOT NULL DEFAULT 'CUSTOMER'::"RoleType"
+  createdAt : timestamp(3) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+  isActive : boolean NOT NULL DEFAULT true
+  locationId : text
+  canApproveQc : boolean NOT NULL DEFAULT false
+
+### _prisma_migrations
+  id : character varying(36) NOT NULL
+  checksum : character varying(64) NOT NULL
+  finished_at : timestamp with time zone
+  migration_name : character varying(255) NOT NULL
+  logs : text
+  rolled_back_at : timestamp with time zone
+  started_at : timestamp with time zone NOT NULL DEFAULT now()
+  applied_steps_count : integer NOT NULL DEFAULT 0
+
+## PRIMARY KEYS
+
+  BillOfMaterials : BillOfMaterials_pkey (id)
+  Category : Category_pkey (id)
+  CustomerAddress : CustomerAddress_pkey (id)
+  Delivery : Delivery_pkey (id)
+  DeliveryQuote : DeliveryQuote_pkey (id)
+  DeliveryQuoteHistory : DeliveryQuoteHistory_pkey (id)
+  FinancialLedger : FinancialLedger_pkey (id)
+  FulfillmentGroup : FulfillmentGroup_pkey (id)
+  IdempotencyRecord : IdempotencyRecord_pkey (id)
+  InventoryStock : InventoryStock_pkey (id)
+  Location : Location_pkey (id)
+  Order : Order_pkey (id)
+  OrderItem : OrderItem_pkey (id)
+  Payment : Payment_pkey (id)
+  PaymentAllocation : PaymentAllocation_pkey (id)
+  PaymentObligation : PaymentObligation_pkey (id)
+  Product : Product_pkey (id)
+  ProductImage : ProductImage_pkey (id)
+  ProductVariant : ProductVariant_pkey (id)
+  ProductionJob : ProductionJob_pkey (id)
+  ProductionQcHistory : ProductionQcHistory_pkey (id)
+  ProductionStatusHistory : ProductionStatusHistory_pkey (id)
+  RawMaterial : RawMaterial_pkey (id)
+  RawMaterialLedger : RawMaterialLedger_pkey (id)
+  RawMaterialStock : RawMaterialStock_pkey (id)
+  RefundAllocation : RefundAllocation_pkey (id)
+  RefundRequest : RefundRequest_pkey (id)
+  StockLedger : StockLedger_pkey (id)
+  SystemConfig : SystemConfig_pkey (id)
+  User : User_pkey (id)
+  _prisma_migrations : _prisma_migrations_pkey (id)
+
+## FOREIGN KEYS (62)
+
+  BillOfMaterials.productId -> Product.id [BillOfMaterials_productId_fkey]
+  BillOfMaterials.rawMaterialId -> RawMaterial.id [BillOfMaterials_rawMaterialId_fkey]
+  CustomerAddress.userId -> User.id [CustomerAddress_userId_fkey]
+  Delivery.fulfillmentGroupId -> FulfillmentGroup.id [Delivery_fulfillmentGroupId_fkey]
+  DeliveryQuote.approvedById -> User.id [DeliveryQuote_approvedById_fkey]
+  DeliveryQuote.fulfillmentGroupId -> FulfillmentGroup.id [DeliveryQuote_fulfillmentGroupId_fkey]
+  DeliveryQuoteHistory.quoteId -> DeliveryQuote.id [DeliveryQuoteHistory_quoteId_fkey]
+  FinancialLedger.orderId -> Order.id [FinancialLedger_orderId_fkey]
+  FulfillmentGroup.orderId -> Order.id [FulfillmentGroup_orderId_fkey]
+  InventoryStock.locationId -> Location.id [InventoryStock_locationId_fkey]
+  InventoryStock.variantId -> ProductVariant.id [InventoryStock_variantId_fkey]
+  Order.userId -> User.id [Order_userId_fkey]
+  OrderItem.orderId -> FulfillmentGroup.orderId [OrderItem_fulfillmentGroupId_orderId_fkey]
+  OrderItem.fulfillmentGroupId -> FulfillmentGroup.id [OrderItem_fulfillmentGroupId_orderId_fkey]
+  OrderItem.fulfillmentGroupId -> FulfillmentGroup.orderId [OrderItem_fulfillmentGroupId_orderId_fkey]
+  OrderItem.orderId -> FulfillmentGroup.id [OrderItem_fulfillmentGroupId_orderId_fkey]
+  OrderItem.orderId -> Order.id [OrderItem_orderId_fkey]
+  OrderItem.variantId -> ProductVariant.id [OrderItem_variantId_fkey]
+  PaymentAllocation.ledgerId -> FinancialLedger.id [PaymentAllocation_ledgerId_orderId_fkey]
+  PaymentAllocation.ledgerId -> FinancialLedger.orderId [PaymentAllocation_ledgerId_orderId_fkey]
+  PaymentAllocation.orderId -> FinancialLedger.id [PaymentAllocation_ledgerId_orderId_fkey]
+  PaymentAllocation.orderId -> FinancialLedger.orderId [PaymentAllocation_ledgerId_orderId_fkey]
+  PaymentAllocation.orderId -> PaymentObligation.orderId [PaymentAllocation_obligationId_orderId_fkey]
+  PaymentAllocation.obligationId -> PaymentObligation.id [PaymentAllocation_obligationId_orderId_fkey]
+  PaymentAllocation.obligationId -> PaymentObligation.orderId [PaymentAllocation_obligationId_orderId_fkey]
+  PaymentAllocation.orderId -> PaymentObligation.id [PaymentAllocation_obligationId_orderId_fkey]
+  PaymentObligation.deliveryQuoteId -> DeliveryQuote.id [PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey]
+  PaymentObligation.deliveryQuoteId -> DeliveryQuote.fulfillmentGroupId [PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey]
+  PaymentObligation.fulfillmentGroupId -> DeliveryQuote.id [PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey]
+  PaymentObligation.fulfillmentGroupId -> DeliveryQuote.fulfillmentGroupId [PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey]
+  PaymentObligation.orderId -> FulfillmentGroup.id [PaymentObligation_fulfillmentGroupId_orderId_fkey]
+  PaymentObligation.orderId -> FulfillmentGroup.orderId [PaymentObligation_fulfillmentGroupId_orderId_fkey]
+  PaymentObligation.fulfillmentGroupId -> FulfillmentGroup.id [PaymentObligation_fulfillmentGroupId_orderId_fkey]
+  PaymentObligation.fulfillmentGroupId -> FulfillmentGroup.orderId [PaymentObligation_fulfillmentGroupId_orderId_fkey]
+  Product.categoryId -> Category.id [Product_categoryId_fkey]
+  ProductImage.productId -> Product.id [ProductImage_productId_fkey]
+  ProductVariant.productId -> Product.id [ProductVariant_productId_fkey]
+  ProductionJob.assignedToId -> User.id [ProductionJob_assignedToId_fkey]
+  ProductionJob.orderItemId -> OrderItem.id [ProductionJob_orderItemId_fkey]
+  ProductionQcHistory.changedById -> User.id [ProductionQcHistory_changedById_fkey]
+  ProductionQcHistory.productionJobId -> ProductionJob.id [ProductionQcHistory_productionJobId_fkey]
+  ProductionStatusHistory.changedById -> User.id [ProductionStatusHistory_changedById_fkey]
+  ProductionStatusHistory.productionJobId -> ProductionJob.id [ProductionStatusHistory_productionJobId_fkey]
+  RawMaterialLedger.productionJobId -> ProductionJob.id [RawMaterialLedger_productionJobId_fkey]
+  RawMaterialLedger.rawMaterialId -> RawMaterial.id [RawMaterialLedger_rawMaterialId_fkey]
+  RawMaterialStock.locationId -> Location.id [RawMaterialStock_locationId_fkey]
+  RawMaterialStock.rawMaterialId -> RawMaterial.id [RawMaterialStock_rawMaterialId_fkey]
+  RefundAllocation.originalAllocationId -> PaymentAllocation.id [RefundAllocation_originalAllocationId_originalLedgerId_fkey]
+  RefundAllocation.originalLedgerId -> PaymentAllocation.ledgerId [RefundAllocation_originalAllocationId_originalLedgerId_fkey]
+  RefundAllocation.originalLedgerId -> PaymentAllocation.id [RefundAllocation_originalAllocationId_originalLedgerId_fkey]
+  RefundAllocation.originalAllocationId -> PaymentAllocation.ledgerId [RefundAllocation_originalAllocationId_originalLedgerId_fkey]
+  RefundAllocation.refundRequestId -> RefundRequest.originalLedgerId [RefundAllocation_refundRequestId_originalLedgerId_fkey]
+  RefundAllocation.refundRequestId -> RefundRequest.id [RefundAllocation_refundRequestId_originalLedgerId_fkey]
+  RefundAllocation.originalLedgerId -> RefundRequest.id [RefundAllocation_refundRequestId_originalLedgerId_fkey]
+  RefundAllocation.originalLedgerId -> RefundRequest.originalLedgerId [RefundAllocation_refundRequestId_originalLedgerId_fkey]
+  RefundRequest.approvedById -> User.id [RefundRequest_approvedById_fkey]
+  RefundRequest.originalLedgerId -> FinancialLedger.id [RefundRequest_originalLedgerId_fkey]
+  RefundRequest.processedLedgerId -> FinancialLedger.id [RefundRequest_processedLedgerId_fkey]
+  StockLedger.locationId -> Location.id [StockLedger_locationId_fkey]
+  StockLedger.orderItemId -> OrderItem.id [StockLedger_orderItemId_fkey]
+  StockLedger.variantId -> ProductVariant.id [StockLedger_variantId_fkey]
+  User.locationId -> Location.id [User_locationId_fkey]
+
+## UNIQUE CONSTRAINTS (0)
+
+
+## CHECK CONSTRAINTS (0)
+
+
+## INDEXES (59)
+
+  BillOfMaterials : BillOfMaterials_pkey
+    CREATE UNIQUE INDEX "BillOfMaterials_pkey" ON public."BillOfMaterials" USING btree (id)
+  BillOfMaterials : BillOfMaterials_productId_version_rawMaterialId_key
+    CREATE UNIQUE INDEX "BillOfMaterials_productId_version_rawMaterialId_key" ON public."BillOfMaterials" USING btree ("productId", version, "rawMaterialId")
+  Category : Category_name_key
+    CREATE UNIQUE INDEX "Category_name_key" ON public."Category" USING btree (name)
+  Category : Category_pkey
+    CREATE UNIQUE INDEX "Category_pkey" ON public."Category" USING btree (id)
+  CustomerAddress : CustomerAddress_pkey
+    CREATE UNIQUE INDEX "CustomerAddress_pkey" ON public."CustomerAddress" USING btree (id)
+  Delivery : Delivery_fulfillmentGroupId_key
+    CREATE UNIQUE INDEX "Delivery_fulfillmentGroupId_key" ON public."Delivery" USING btree ("fulfillmentGroupId")
+  Delivery : Delivery_pkey
+    CREATE UNIQUE INDEX "Delivery_pkey" ON public."Delivery" USING btree (id)
+  DeliveryQuote : DeliveryQuote_fulfillmentGroupId_version_key
+    CREATE UNIQUE INDEX "DeliveryQuote_fulfillmentGroupId_version_key" ON public."DeliveryQuote" USING btree ("fulfillmentGroupId", version)
+  DeliveryQuote : DeliveryQuote_id_fulfillmentGroupId_key
+    CREATE UNIQUE INDEX "DeliveryQuote_id_fulfillmentGroupId_key" ON public."DeliveryQuote" USING btree (id, "fulfillmentGroupId")
+  DeliveryQuote : DeliveryQuote_pkey
+    CREATE UNIQUE INDEX "DeliveryQuote_pkey" ON public."DeliveryQuote" USING btree (id)
+  DeliveryQuoteHistory : DeliveryQuoteHistory_pkey
+    CREATE UNIQUE INDEX "DeliveryQuoteHistory_pkey" ON public."DeliveryQuoteHistory" USING btree (id)
+  FinancialLedger : FinancialLedger_id_orderId_key
+    CREATE UNIQUE INDEX "FinancialLedger_id_orderId_key" ON public."FinancialLedger" USING btree (id, "orderId")
+  FinancialLedger : FinancialLedger_pkey
+    CREATE UNIQUE INDEX "FinancialLedger_pkey" ON public."FinancialLedger" USING btree (id)
+  FinancialLedger : FinancialLedger_reference_key
+    CREATE UNIQUE INDEX "FinancialLedger_reference_key" ON public."FinancialLedger" USING btree (reference)
+  FulfillmentGroup : FulfillmentGroup_id_orderId_key
+    CREATE UNIQUE INDEX "FulfillmentGroup_id_orderId_key" ON public."FulfillmentGroup" USING btree (id, "orderId")
+  FulfillmentGroup : FulfillmentGroup_pkey
+    CREATE UNIQUE INDEX "FulfillmentGroup_pkey" ON public."FulfillmentGroup" USING btree (id)
+  IdempotencyRecord : IdempotencyRecord_key_key
+    CREATE UNIQUE INDEX "IdempotencyRecord_key_key" ON public."IdempotencyRecord" USING btree (key)
+  IdempotencyRecord : IdempotencyRecord_pkey
+    CREATE UNIQUE INDEX "IdempotencyRecord_pkey" ON public."IdempotencyRecord" USING btree (id)
+  InventoryStock : InventoryStock_pkey
+    CREATE UNIQUE INDEX "InventoryStock_pkey" ON public."InventoryStock" USING btree (id)
+  InventoryStock : InventoryStock_variantId_locationId_key
+    CREATE UNIQUE INDEX "InventoryStock_variantId_locationId_key" ON public."InventoryStock" USING btree ("variantId", "locationId")
+  Location : Location_name_key
+    CREATE UNIQUE INDEX "Location_name_key" ON public."Location" USING btree (name)
+  Location : Location_pkey
+    CREATE UNIQUE INDEX "Location_pkey" ON public."Location" USING btree (id)
+  Order : Order_pkey
+    CREATE UNIQUE INDEX "Order_pkey" ON public."Order" USING btree (id)
+  OrderItem : OrderItem_pkey
+    CREATE UNIQUE INDEX "OrderItem_pkey" ON public."OrderItem" USING btree (id)
+  Payment : Payment_idempotencyKey_key
+    CREATE UNIQUE INDEX "Payment_idempotencyKey_key" ON public."Payment" USING btree ("idempotencyKey")
+  Payment : Payment_orderId_isPrimary_idx
+    CREATE INDEX "Payment_orderId_isPrimary_idx" ON public."Payment" USING btree ("orderId", "isPrimary")
+  Payment : Payment_pkey
+    CREATE UNIQUE INDEX "Payment_pkey" ON public."Payment" USING btree (id)
+  PaymentAllocation : PaymentAllocation_id_ledgerId_key
+    CREATE UNIQUE INDEX "PaymentAllocation_id_ledgerId_key" ON public."PaymentAllocation" USING btree (id, "ledgerId")
+  PaymentAllocation : PaymentAllocation_id_orderId_key
+    CREATE UNIQUE INDEX "PaymentAllocation_id_orderId_key" ON public."PaymentAllocation" USING btree (id, "orderId")
+  PaymentAllocation : PaymentAllocation_pkey
+    CREATE UNIQUE INDEX "PaymentAllocation_pkey" ON public."PaymentAllocation" USING btree (id)
+  PaymentObligation : PaymentObligation_deliveryQuoteId_fulfillmentGroupId_key
+    CREATE UNIQUE INDEX "PaymentObligation_deliveryQuoteId_fulfillmentGroupId_key" ON public."PaymentObligation" USING btree ("deliveryQuoteId", "fulfillmentGroupId")
+  PaymentObligation : PaymentObligation_id_orderId_key
+    CREATE UNIQUE INDEX "PaymentObligation_id_orderId_key" ON public."PaymentObligation" USING btree (id, "orderId")
+  PaymentObligation : PaymentObligation_pkey
+    CREATE UNIQUE INDEX "PaymentObligation_pkey" ON public."PaymentObligation" USING btree (id)
+  Product : Product_pkey
+    CREATE UNIQUE INDEX "Product_pkey" ON public."Product" USING btree (id)
+  ProductImage : ProductImage_pkey
+    CREATE UNIQUE INDEX "ProductImage_pkey" ON public."ProductImage" USING btree (id)
+  ProductVariant : ProductVariant_pkey
+    CREATE UNIQUE INDEX "ProductVariant_pkey" ON public."ProductVariant" USING btree (id)
+  ProductVariant : ProductVariant_sku_key
+    CREATE UNIQUE INDEX "ProductVariant_sku_key" ON public."ProductVariant" USING btree (sku)
+  ProductionJob : ProductionJob_orderItemId_key
+    CREATE UNIQUE INDEX "ProductionJob_orderItemId_key" ON public."ProductionJob" USING btree ("orderItemId")
+  ProductionJob : ProductionJob_pkey
+    CREATE UNIQUE INDEX "ProductionJob_pkey" ON public."ProductionJob" USING btree (id)
+  ProductionQcHistory : ProductionQcHistory_pkey
+    CREATE UNIQUE INDEX "ProductionQcHistory_pkey" ON public."ProductionQcHistory" USING btree (id)
+  ProductionQcHistory : ProductionQcHistory_productionJobId_sequenceNumber_key
+    CREATE UNIQUE INDEX "ProductionQcHistory_productionJobId_sequenceNumber_key" ON public."ProductionQcHistory" USING btree ("productionJobId", "sequenceNumber")
+  ProductionStatusHistory : ProductionStatusHistory_pkey
+    CREATE UNIQUE INDEX "ProductionStatusHistory_pkey" ON public."ProductionStatusHistory" USING btree (id)
+  RawMaterial : RawMaterial_pkey
+    CREATE UNIQUE INDEX "RawMaterial_pkey" ON public."RawMaterial" USING btree (id)
+  RawMaterialLedger : RawMaterialLedger_pkey
+    CREATE UNIQUE INDEX "RawMaterialLedger_pkey" ON public."RawMaterialLedger" USING btree (id)
+  RawMaterialStock : RawMaterialStock_pkey
+    CREATE UNIQUE INDEX "RawMaterialStock_pkey" ON public."RawMaterialStock" USING btree (id)
+  RawMaterialStock : RawMaterialStock_rawMaterialId_locationId_key
+    CREATE UNIQUE INDEX "RawMaterialStock_rawMaterialId_locationId_key" ON public."RawMaterialStock" USING btree ("rawMaterialId", "locationId")
+  RefundAllocation : RefundAllocation_pkey
+    CREATE UNIQUE INDEX "RefundAllocation_pkey" ON public."RefundAllocation" USING btree (id)
+  RefundAllocation : RefundAllocation_refundRequestId_originalAllocationId_key
+    CREATE UNIQUE INDEX "RefundAllocation_refundRequestId_originalAllocationId_key" ON public."RefundAllocation" USING btree ("refundRequestId", "originalAllocationId")
+  RefundRequest : RefundRequest_id_originalLedgerId_key
+    CREATE UNIQUE INDEX "RefundRequest_id_originalLedgerId_key" ON public."RefundRequest" USING btree (id, "originalLedgerId")
+  RefundRequest : RefundRequest_pkey
+    CREATE UNIQUE INDEX "RefundRequest_pkey" ON public."RefundRequest" USING btree (id)
+  RefundRequest : RefundRequest_processedLedgerId_key
+    CREATE UNIQUE INDEX "RefundRequest_processedLedgerId_key" ON public."RefundRequest" USING btree ("processedLedgerId")
+  StockLedger : StockLedger_pkey
+    CREATE UNIQUE INDEX "StockLedger_pkey" ON public."StockLedger" USING btree (id)
+  StockLedger : StockLedger_reference_type_variantId_locationId_key
+    CREATE UNIQUE INDEX "StockLedger_reference_type_variantId_locationId_key" ON public."StockLedger" USING btree (reference, type, "variantId", "locationId")
+  StockLedger : StockLedger_transferGroupId_idx
+    CREATE INDEX "StockLedger_transferGroupId_idx" ON public."StockLedger" USING btree ("transferGroupId")
+  SystemConfig : SystemConfig_key_key
+    CREATE UNIQUE INDEX "SystemConfig_key_key" ON public."SystemConfig" USING btree (key)
+  SystemConfig : SystemConfig_pkey
+    CREATE UNIQUE INDEX "SystemConfig_pkey" ON public."SystemConfig" USING btree (id)
+  User : User_email_key
+    CREATE UNIQUE INDEX "User_email_key" ON public."User" USING btree (email)
+  User : User_pkey
+    CREATE UNIQUE INDEX "User_pkey" ON public."User" USING btree (id)
+  _prisma_migrations : _prisma_migrations_pkey
+    CREATE UNIQUE INDEX _prisma_migrations_pkey ON public._prisma_migrations USING btree (id)
+
+## ENUMS
+
+  DeliveryQuoteStatus : PENDING, APPROVED, REJECTED, SUPERSEDED
+  DeliveryStatus : PENDING, DISPATCHED, DELIVERED, CANCELLED
+  FulfillmentStatus : PENDING, AWAITING_QUOTE, AWAITING_BALANCE, READY_FOR_DISPATCH, DISPATCHED, CANCELLED
+  FulfillmentType : READY_STOCK, MADE_TO_ORDER
+  LedgerTransactionType : PAYMENT, REFUND, ADJUSTMENT
+  LocationType : CENTRAL_WAREHOUSE, SHOWROOM
+  ObligationStatus : PENDING, PAID, VOID
+  ObligationType : DEPOSIT, PRODUCT_BALANCE, DELIVERY_CHARGE
+  OrderStatus : PENDING, CONFIRMED, PROCESSING, DISPATCHED, COMPLETED, CANCELLED
+  PaymentStatus : PENDING, VERIFIED, FAILED
+  ProductStatus : DRAFT, PUBLISHED, ARCHIVED
+  ProductionStatus : PENDING, IN_PROGRESS, QC_PENDING, COMPLETED, CANCELLED
+  QCStatus : PASSED, REJECTED
+  RawMaterialMovementType : RECEIPT, CONSUMPTION, REVERSAL, ADJUSTMENT
+  RefundStatus : PENDING, APPROVED, PROCESSED, REJECTED
+  RoleType : SUPER_ADMIN, FINANCE_MANAGER, PRODUCTION_MANAGER, SHOWROOM_MANAGER, CUSTOMER
+  StockLedgerStatus : ACTIVE, FULFILLED, CANCELLED
+  StockMovementType : RECEIPT, TRANSFER_OUT, TRANSFER_IN, RESERVATION, DISPATCH, CANCELLATION, RESTOCK, ADJUSTMENT, OPENING_BALANCE
+

@@ -1,60 +1,61 @@
 === ENVIRONMENT ===
 PostgreSQL: 18.6 (ac70818)
 Database: neondb
-Git commit: 3e9a4723fb124ade8b9a59bebe0a0d1fba7aa43c
+Git commit: a60ed43824d60cb641a25582fc786e6c812b2f9e
 Node.js: v22.18.0
+Host validation: APPROVED (ep-silent-union-bb47s2rr-pooler.c-15.us-east-1.aws.neon.tech)
 
-=== TRIGGERS FROM pg_trigger CATALOG ===
-Total distinct triggers (pg_trigger): 11
-  FinancialLedger | trg_immutable_ledger
-  FulfillmentGroup | trg_dispatch
-  PaymentAllocation | trg_immutable_alloc
-  PaymentAllocation | trg_payment_alloc
-  ProductionJob | trg_production_transition
-  ProductionQcHistory | trg_immutable_qc
-  ProductionQcHistory | trg_qc_insert
-  RawMaterialLedger | trg_raw_material
-  RefundRequest | trg_refund_processing
-  StockLedger | trg_inventory
-  StockLedger | trg_transfer_pairing
+=== TRIGGERS ===
+Total distinct triggers: 11
+  FinancialLedger | trg_immutable_ledger | fn=prevent_financial_mod
+  FulfillmentGroup | trg_dispatch | fn=check_dispatch_guard
+  PaymentAllocation | trg_immutable_alloc | fn=prevent_financial_mod
+  PaymentAllocation | trg_payment_alloc | fn=check_payment_allocation
+  ProductionJob | trg_production_transition | fn=check_production_transition
+  ProductionQcHistory | trg_immutable_qc | fn=prevent_financial_mod
+  ProductionQcHistory | trg_qc_insert | fn=check_qc_insert
+  RawMaterialLedger | trg_raw_material | fn=manage_raw_material
+  RefundRequest | trg_refund_processing | fn=check_refund_processing
+  StockLedger | trg_inventory | fn=manage_inventory_lifecycle
+  StockLedger | trg_transfer_pairing | fn=check_transfer_pairing
 
-=== SEEDING BASE FIXTURES ===
+=== SEED ===
 OK: Seed committed
 
 === V1 TESTS ===
-[V1] TEST 1 PASSED: Inventory lifecycle correct
-[V1] TEST 2 PASSED: Dispatch blocked for missing obligations
-[V1] TEST 3a PASSED: Refund blocked without allocations
-[V1] TEST 3b PASSED: Refund processed with valid allocations
-[V1] TEST 4 PASSED: Dispatch succeeded with paid obligations
-[V1] TEST 5 PASSED: Financial ledger immutable
+[V1] NOTICE: TEST 1 PASSED: Inventory lifecycle correct
+[V1] NOTICE: TEST 2 PASSED: Dispatch blocked for missing obligations
+[V1] NOTICE: TEST 3a PASSED: Refund blocked without allocations
+[V1] NOTICE: TEST 3b PASSED: Refund processed with valid allocations
+[V1] NOTICE: TEST 4 PASSED: Dispatch succeeded with paid obligations
+[V1] NOTICE: TEST 5 PASSED: Financial ledger immutable
 >>> V1: COMPLETED
 
 === V2 TESTS ===
-[V2] TEST 6 PASSED: Raw material lifecycle + over-consume rejected
-[V2] TEST 7a PASSED: Over-reversal rejected
-[V2] TEST 7b PASSED: ADJUSTMENT requires reference
-[V2] TEST 8 PASSED: Unauthorized QC inspector rejected
-[V2] TEST 9a PASSED: QC requires QC_PENDING state
-[V2] TEST 10a PASSED: Completion blocked by REJECTED latest QC
-[V2] TEST 10b PASSED: Completion allowed after latest PASSED QC
+[V2] NOTICE: TEST 6 PASSED: Raw material lifecycle + over-consume rejected
+[V2] NOTICE: TEST 7a PASSED: Over-reversal rejected
+[V2] NOTICE: TEST 7b PASSED: ADJUSTMENT requires reference
+[V2] NOTICE: TEST 8 PASSED: Unauthorized QC inspector rejected
+[V2] NOTICE: TEST 9a PASSED: QC requires QC_PENDING state
+[V2] NOTICE: TEST 10a PASSED: Completion blocked by REJECTED latest QC
+[V2] NOTICE: TEST 10b PASSED: Completion allowed after latest PASSED QC
 >>> V2: COMPLETED
 
 === TRANSFER PAIRING ===
->>> XFER-A PASSED: Unpaired transfer rejected
->>> XFER-B PASSED: Paired transfer committed (A=7, B=3)
+>>> XFER-A PASSED: Unpaired rejected at COMMIT
+>>> XFER-B PASSED: Paired transfer (A=7, B=3)
 >>> XFER-C PASSED: Mismatched variant rejected
 >>> XFER-D PASSED: Duplicate TRANSFER_OUT rejected
 
 === WRONG-PAYMENT REFUND ===
->>> WP PASSED: Wrong-payment refund allocation rejected
+>>> WP PASSED: Wrong-payment rejected by composite FK
 
 === CONCURRENCY ===
->>> CONC-1 PASSED: Last-unit race - exactly one succeeded
->>> CONC-2 PASSED: Allocation race - exactly one succeeded
+>>> CONC-1 PASSED: 1 reservation committed, onHand=1 reserved=1, loser rejected with "Insufficient available stock"
+>>> CONC-2 PASSED: 1 allocation committed (6000 <= 10000), loser rejected with "exceeds obligation"
 
 === FINAL STATS ===
-Tables: 31 | Distinct triggers (pg_trigger): 11
+Tables: 31 | Distinct triggers: 11
 
 === SUMMARY ===
 Passed: 20
