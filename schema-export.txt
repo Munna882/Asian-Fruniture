@@ -1,5 +1,7 @@
-=== SCHEMA EXPORT ===
-Captured: 2026-11-04T17:06:01.010Z
+=== SCHEMA CATALOGUE INVENTORY ===
+NOTE: This is a catalogue query, not a complete pg_dump --schema-only DDL export.
+pg_dump unavailable on this machine; the catalogue output below is the primary artifact.
+Captured: 2026-11-04T17:29:46.319Z
 
 ## TABLES AND COLUMNS (31)
 
@@ -292,70 +294,97 @@ Captured: 2026-11-04T17:06:01.010Z
   User : User_pkey (id)
   _prisma_migrations : _prisma_migrations_pkey (id)
 
-## FOREIGN KEYS (62)
+## FOREIGN KEYS — column pairs (48 rows, position-aware)
 
-  BillOfMaterials.productId -> Product.id [BillOfMaterials_productId_fkey]
-  BillOfMaterials.rawMaterialId -> RawMaterial.id [BillOfMaterials_rawMaterialId_fkey]
-  CustomerAddress.userId -> User.id [CustomerAddress_userId_fkey]
-  Delivery.fulfillmentGroupId -> FulfillmentGroup.id [Delivery_fulfillmentGroupId_fkey]
-  DeliveryQuote.approvedById -> User.id [DeliveryQuote_approvedById_fkey]
-  DeliveryQuote.fulfillmentGroupId -> FulfillmentGroup.id [DeliveryQuote_fulfillmentGroupId_fkey]
-  DeliveryQuoteHistory.quoteId -> DeliveryQuote.id [DeliveryQuoteHistory_quoteId_fkey]
-  FinancialLedger.orderId -> Order.id [FinancialLedger_orderId_fkey]
-  FulfillmentGroup.orderId -> Order.id [FulfillmentGroup_orderId_fkey]
-  InventoryStock.locationId -> Location.id [InventoryStock_locationId_fkey]
-  InventoryStock.variantId -> ProductVariant.id [InventoryStock_variantId_fkey]
-  Order.userId -> User.id [Order_userId_fkey]
-  OrderItem.orderId -> FulfillmentGroup.orderId [OrderItem_fulfillmentGroupId_orderId_fkey]
-  OrderItem.fulfillmentGroupId -> FulfillmentGroup.id [OrderItem_fulfillmentGroupId_orderId_fkey]
-  OrderItem.fulfillmentGroupId -> FulfillmentGroup.orderId [OrderItem_fulfillmentGroupId_orderId_fkey]
-  OrderItem.orderId -> FulfillmentGroup.id [OrderItem_fulfillmentGroupId_orderId_fkey]
-  OrderItem.orderId -> Order.id [OrderItem_orderId_fkey]
-  OrderItem.variantId -> ProductVariant.id [OrderItem_variantId_fkey]
-  PaymentAllocation.ledgerId -> FinancialLedger.id [PaymentAllocation_ledgerId_orderId_fkey]
-  PaymentAllocation.ledgerId -> FinancialLedger.orderId [PaymentAllocation_ledgerId_orderId_fkey]
-  PaymentAllocation.orderId -> FinancialLedger.id [PaymentAllocation_ledgerId_orderId_fkey]
-  PaymentAllocation.orderId -> FinancialLedger.orderId [PaymentAllocation_ledgerId_orderId_fkey]
-  PaymentAllocation.orderId -> PaymentObligation.orderId [PaymentAllocation_obligationId_orderId_fkey]
-  PaymentAllocation.obligationId -> PaymentObligation.id [PaymentAllocation_obligationId_orderId_fkey]
-  PaymentAllocation.obligationId -> PaymentObligation.orderId [PaymentAllocation_obligationId_orderId_fkey]
-  PaymentAllocation.orderId -> PaymentObligation.id [PaymentAllocation_obligationId_orderId_fkey]
-  PaymentObligation.deliveryQuoteId -> DeliveryQuote.id [PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey]
-  PaymentObligation.deliveryQuoteId -> DeliveryQuote.fulfillmentGroupId [PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey]
-  PaymentObligation.fulfillmentGroupId -> DeliveryQuote.id [PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey]
-  PaymentObligation.fulfillmentGroupId -> DeliveryQuote.fulfillmentGroupId [PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey]
-  PaymentObligation.orderId -> FulfillmentGroup.id [PaymentObligation_fulfillmentGroupId_orderId_fkey]
-  PaymentObligation.orderId -> FulfillmentGroup.orderId [PaymentObligation_fulfillmentGroupId_orderId_fkey]
-  PaymentObligation.fulfillmentGroupId -> FulfillmentGroup.id [PaymentObligation_fulfillmentGroupId_orderId_fkey]
-  PaymentObligation.fulfillmentGroupId -> FulfillmentGroup.orderId [PaymentObligation_fulfillmentGroupId_orderId_fkey]
-  Product.categoryId -> Category.id [Product_categoryId_fkey]
-  ProductImage.productId -> Product.id [ProductImage_productId_fkey]
-  ProductVariant.productId -> Product.id [ProductVariant_productId_fkey]
-  ProductionJob.assignedToId -> User.id [ProductionJob_assignedToId_fkey]
-  ProductionJob.orderItemId -> OrderItem.id [ProductionJob_orderItemId_fkey]
-  ProductionQcHistory.changedById -> User.id [ProductionQcHistory_changedById_fkey]
-  ProductionQcHistory.productionJobId -> ProductionJob.id [ProductionQcHistory_productionJobId_fkey]
-  ProductionStatusHistory.changedById -> User.id [ProductionStatusHistory_changedById_fkey]
-  ProductionStatusHistory.productionJobId -> ProductionJob.id [ProductionStatusHistory_productionJobId_fkey]
-  RawMaterialLedger.productionJobId -> ProductionJob.id [RawMaterialLedger_productionJobId_fkey]
-  RawMaterialLedger.rawMaterialId -> RawMaterial.id [RawMaterialLedger_rawMaterialId_fkey]
-  RawMaterialStock.locationId -> Location.id [RawMaterialStock_locationId_fkey]
-  RawMaterialStock.rawMaterialId -> RawMaterial.id [RawMaterialStock_rawMaterialId_fkey]
-  RefundAllocation.originalAllocationId -> PaymentAllocation.id [RefundAllocation_originalAllocationId_originalLedgerId_fkey]
-  RefundAllocation.originalLedgerId -> PaymentAllocation.ledgerId [RefundAllocation_originalAllocationId_originalLedgerId_fkey]
-  RefundAllocation.originalLedgerId -> PaymentAllocation.id [RefundAllocation_originalAllocationId_originalLedgerId_fkey]
-  RefundAllocation.originalAllocationId -> PaymentAllocation.ledgerId [RefundAllocation_originalAllocationId_originalLedgerId_fkey]
-  RefundAllocation.refundRequestId -> RefundRequest.originalLedgerId [RefundAllocation_refundRequestId_originalLedgerId_fkey]
-  RefundAllocation.refundRequestId -> RefundRequest.id [RefundAllocation_refundRequestId_originalLedgerId_fkey]
-  RefundAllocation.originalLedgerId -> RefundRequest.id [RefundAllocation_refundRequestId_originalLedgerId_fkey]
-  RefundAllocation.originalLedgerId -> RefundRequest.originalLedgerId [RefundAllocation_refundRequestId_originalLedgerId_fkey]
-  RefundRequest.approvedById -> User.id [RefundRequest_approvedById_fkey]
-  RefundRequest.originalLedgerId -> FinancialLedger.id [RefundRequest_originalLedgerId_fkey]
-  RefundRequest.processedLedgerId -> FinancialLedger.id [RefundRequest_processedLedgerId_fkey]
-  StockLedger.locationId -> Location.id [StockLedger_locationId_fkey]
-  StockLedger.orderItemId -> OrderItem.id [StockLedger_orderItemId_fkey]
-  StockLedger.variantId -> ProductVariant.id [StockLedger_variantId_fkey]
-  User.locationId -> Location.id [User_locationId_fkey]
+  [BillOfMaterials_productId_fkey] BillOfMaterials
+    pos 1: BillOfMaterials.productId -> Product.id
+  [BillOfMaterials_rawMaterialId_fkey] BillOfMaterials
+    pos 1: BillOfMaterials.rawMaterialId -> RawMaterial.id
+  [CustomerAddress_userId_fkey] CustomerAddress
+    pos 1: CustomerAddress.userId -> User.id
+  [Delivery_fulfillmentGroupId_fkey] Delivery
+    pos 1: Delivery.fulfillmentGroupId -> FulfillmentGroup.id
+  [DeliveryQuote_approvedById_fkey] DeliveryQuote
+    pos 1: DeliveryQuote.approvedById -> User.id
+  [DeliveryQuote_fulfillmentGroupId_fkey] DeliveryQuote
+    pos 1: DeliveryQuote.fulfillmentGroupId -> FulfillmentGroup.id
+  [DeliveryQuoteHistory_quoteId_fkey] DeliveryQuoteHistory
+    pos 1: DeliveryQuoteHistory.quoteId -> DeliveryQuote.id
+  [FinancialLedger_orderId_fkey] FinancialLedger
+    pos 1: FinancialLedger.orderId -> Order.id
+  [FulfillmentGroup_orderId_fkey] FulfillmentGroup
+    pos 1: FulfillmentGroup.orderId -> Order.id
+  [InventoryStock_locationId_fkey] InventoryStock
+    pos 1: InventoryStock.locationId -> Location.id
+  [InventoryStock_variantId_fkey] InventoryStock
+    pos 1: InventoryStock.variantId -> ProductVariant.id
+  [Order_userId_fkey] Order
+    pos 1: Order.userId -> User.id
+  [OrderItem_fulfillmentGroupId_orderId_fkey] OrderItem
+    pos 1: OrderItem.fulfillmentGroupId -> FulfillmentGroup.id
+    pos 2: OrderItem.orderId -> FulfillmentGroup.orderId
+  [OrderItem_orderId_fkey] OrderItem
+    pos 1: OrderItem.orderId -> Order.id
+  [OrderItem_variantId_fkey] OrderItem
+    pos 1: OrderItem.variantId -> ProductVariant.id
+  [PaymentAllocation_ledgerId_orderId_fkey] PaymentAllocation
+    pos 1: PaymentAllocation.ledgerId -> FinancialLedger.id
+    pos 2: PaymentAllocation.orderId -> FinancialLedger.orderId
+  [PaymentAllocation_obligationId_orderId_fkey] PaymentAllocation
+    pos 1: PaymentAllocation.obligationId -> PaymentObligation.id
+    pos 2: PaymentAllocation.orderId -> PaymentObligation.orderId
+  [PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey] PaymentObligation
+    pos 1: PaymentObligation.deliveryQuoteId -> DeliveryQuote.id
+    pos 2: PaymentObligation.fulfillmentGroupId -> DeliveryQuote.fulfillmentGroupId
+  [PaymentObligation_fulfillmentGroupId_orderId_fkey] PaymentObligation
+    pos 1: PaymentObligation.fulfillmentGroupId -> FulfillmentGroup.id
+    pos 2: PaymentObligation.orderId -> FulfillmentGroup.orderId
+  [Product_categoryId_fkey] Product
+    pos 1: Product.categoryId -> Category.id
+  [ProductImage_productId_fkey] ProductImage
+    pos 1: ProductImage.productId -> Product.id
+  [ProductVariant_productId_fkey] ProductVariant
+    pos 1: ProductVariant.productId -> Product.id
+  [ProductionJob_assignedToId_fkey] ProductionJob
+    pos 1: ProductionJob.assignedToId -> User.id
+  [ProductionJob_orderItemId_fkey] ProductionJob
+    pos 1: ProductionJob.orderItemId -> OrderItem.id
+  [ProductionQcHistory_changedById_fkey] ProductionQcHistory
+    pos 1: ProductionQcHistory.changedById -> User.id
+  [ProductionQcHistory_productionJobId_fkey] ProductionQcHistory
+    pos 1: ProductionQcHistory.productionJobId -> ProductionJob.id
+  [ProductionStatusHistory_changedById_fkey] ProductionStatusHistory
+    pos 1: ProductionStatusHistory.changedById -> User.id
+  [ProductionStatusHistory_productionJobId_fkey] ProductionStatusHistory
+    pos 1: ProductionStatusHistory.productionJobId -> ProductionJob.id
+  [RawMaterialLedger_productionJobId_fkey] RawMaterialLedger
+    pos 1: RawMaterialLedger.productionJobId -> ProductionJob.id
+  [RawMaterialLedger_rawMaterialId_fkey] RawMaterialLedger
+    pos 1: RawMaterialLedger.rawMaterialId -> RawMaterial.id
+  [RawMaterialStock_locationId_fkey] RawMaterialStock
+    pos 1: RawMaterialStock.locationId -> Location.id
+  [RawMaterialStock_rawMaterialId_fkey] RawMaterialStock
+    pos 1: RawMaterialStock.rawMaterialId -> RawMaterial.id
+  [RefundAllocation_originalAllocationId_originalLedgerId_fkey] RefundAllocation
+    pos 1: RefundAllocation.originalAllocationId -> PaymentAllocation.id
+    pos 2: RefundAllocation.originalLedgerId -> PaymentAllocation.ledgerId
+  [RefundAllocation_refundRequestId_originalLedgerId_fkey] RefundAllocation
+    pos 1: RefundAllocation.refundRequestId -> RefundRequest.id
+    pos 2: RefundAllocation.originalLedgerId -> RefundRequest.originalLedgerId
+  [RefundRequest_approvedById_fkey] RefundRequest
+    pos 1: RefundRequest.approvedById -> User.id
+  [RefundRequest_originalLedgerId_fkey] RefundRequest
+    pos 1: RefundRequest.originalLedgerId -> FinancialLedger.id
+  [RefundRequest_processedLedgerId_fkey] RefundRequest
+    pos 1: RefundRequest.processedLedgerId -> FinancialLedger.id
+  [StockLedger_locationId_fkey] StockLedger
+    pos 1: StockLedger.locationId -> Location.id
+  [StockLedger_orderItemId_fkey] StockLedger
+    pos 1: StockLedger.orderItemId -> OrderItem.id
+  [StockLedger_variantId_fkey] StockLedger
+    pos 1: StockLedger.variantId -> ProductVariant.id
+  [User_locationId_fkey] User
+    pos 1: User.locationId -> Location.id
 
 ## UNIQUE CONSTRAINTS (0)
 
