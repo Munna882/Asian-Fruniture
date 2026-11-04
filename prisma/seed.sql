@@ -1,0 +1,14 @@
+INSERT INTO "User"(id,email,password,name,role) VALUES ('u_admin','admin@test.com','pw','Admin','SUPER_ADMIN') ON CONFLICT DO NOTHING;
+INSERT INTO "User"(id,email,password,name,role) VALUES ('u_prod','prod@test.com','pw','Prod','PRODUCTION_MANAGER') ON CONFLICT DO NOTHING;
+INSERT INTO "User"(id,email,password,name,role) VALUES ('u_cust','cust@test.com','pw','Cust','CUSTOMER') ON CONFLICT DO NOTHING;
+INSERT INTO "Location"(id,name,type) VALUES ('l1','Showroom','SHOWROOM') ON CONFLICT DO NOTHING;
+INSERT INTO "Location"(id,name,type) VALUES ('l2','Xfer Dest','SHOWROOM') ON CONFLICT DO NOTHING;
+INSERT INTO "Category"(id,name) VALUES ('c1','Cat') ON CONFLICT DO NOTHING;
+INSERT INTO "Product"(id,name,"categoryId") VALUES ('p1','Sofa','c1') ON CONFLICT DO NOTHING;
+INSERT INTO "ProductVariant"(id,"productId",sku,price) VALUES ('v1','p1','SKU1',10000) ON CONFLICT DO NOTHING;
+INSERT INTO "ProductVariant"(id,"productId",sku,price) VALUES ('v_xfer','p1','SKU_XFER',10000) ON CONFLICT DO NOTHING;
+INSERT INTO "InventoryStock"(id,"variantId","locationId","quantityOnHand","quantityReserved") VALUES ('is1','v1','l1',10,0) ON CONFLICT DO NOTHING;
+INSERT INTO "InventoryStock"(id,"variantId","locationId","quantityOnHand","quantityReserved") VALUES ('is_xfer_a','v_xfer','l1',10,0) ON CONFLICT DO NOTHING;
+INSERT INTO "InventoryStock"(id,"variantId","locationId","quantityOnHand","quantityReserved") VALUES ('is_xfer_b','v_xfer','l2',0,0) ON CONFLICT DO NOTHING;
+INSERT INTO "RawMaterial"(id,name,unit) VALUES ('rm_v2','Wood','kg') ON CONFLICT DO NOTHING;
+INSERT INTO "RawMaterialStock"(id,"rawMaterialId","locationId","quantityOnHand") VALUES ('rms_v2','rm_v2','l1',100) ON CONFLICT DO NOTHING;
