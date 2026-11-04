@@ -279,6 +279,8 @@ model RawMaterialLedger {
   movementType    RawMaterialMovementType @map("type")
   quantity        Int
   productionJobId String?
+  approvedById    String?
+  reason          String?
   reversesId      String?
   reference       String?
   createdAt       DateTime                @default(now())

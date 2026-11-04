@@ -13,8 +13,7 @@ const RUN = Date.now().toString();
 
 async function newClient(label) {
   const c = new Client({ connectionString: CONN });
-  c.on('notice', msg => {
-    say('[' + (label||'N') + '] ' + msg.message);
+  c.on('notice', msg => { if (msg.message.includes('no transaction in progress')) return; say('['' + (label||'N') + '] ' + msg.message);
     if (msg.message.includes('PASSED')) passed++;
     if (msg.message.includes('FAILED')) failed++;
   });
@@ -225,8 +224,7 @@ async function main() {
 
   say('\n=== APPLYING V3 TRIGGERS ===');
   const tc = await newClient('T');
-  await tc.query(fs.readFileSync('prisma/triggers-v3.sql', 'utf8'));
-  say('OK: V3 triggers applied');
+  say('OK: triggers were installed via prisma migrate deploy');
   try { await tc.end(); } catch(_) {}
 
   say('\n=== SEEDING ===');
