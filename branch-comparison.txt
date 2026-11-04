@@ -1,14 +1,15 @@
 === BRANCH COMPARISON ===
-Generated: 2026-11-04 23:30:01
+Generated: 2026-11-04 23:35:42
 
 origin/main HEAD:            7b15e625f1006c75479686462c8392f683b437af
-phase-d-v3-evidence HEAD:    7e778a2745ec432c7a6d29c574149f1b00f635b8
+phase-d-v3-evidence HEAD:    10baae6331d1a42b064b027b6f1cd74f711e739b
 
 SOURCE COMMIT (tested runner + tests): a60ed43824d60cb641a25582fc786e6c812b2f9e
 EVIDENCE COMMIT (initial artifacts):   56bcef33a2f20b193c306e0ca03361ff4275df87
-TOOLING COMMIT (capture-schema fix):   7e778a2745ec432c7a6d29c574149f1b00f635b8
+TOOLING COMMIT (capture-schema fix):   10baae6331d1a42b064b027b6f1cd74f711e739b
 
 --- Commits ahead of origin/main ---
+10baae6 Round 1 correction: fixed composite FK extraction, honest secret scan
 7e778a2 Round 1 tooling fix: position-aware composite FK extraction in capture-schema.js
 711c244 Round 1 verification artifacts: branch comparison + secret scan for source a60ed43824d60cb641a25582fc786e6c812b2f9e
 1e3387a Round 1 verification artifacts: branch comparison + secret scan for source a60ed43824d60cb641a25582fc786e6c812b2f9e
@@ -20,22 +21,22 @@ ce7455b Add pg dependency for evidence runner
 1623bce Phase D V3: PM corrections - commitAttempted tracking, full trigger function bodies, complete schema export
 
 --- main unchanged since baseline ---
-origin/main HEAD (7b15e625f1006c75479686462c8392f683b437af) has not received any commits from phase-d-v3-evidence.
+origin/main HEAD (7b15e625f1006c75479686462c8392f683b437af) has no commits from phase-d-v3-evidence.
 
 --- Diff stat main..HEAD ---
 .gitignore                  |   5 +-
- branch-comparison.txt       |  38 ++++
- capture-schema.js           | 134 ++++++++++++
+ branch-comparison.txt       |  41 ++++
+ capture-schema.js           | 134 +++++++++++
  capture-triggers.js         |  30 +++
- package-lock.json           | 430 +++++++++++++++++++++++++++++++++++++
+ package-lock.json           | 430 +++++++++++++++++++++++++++++++++++
  package.json                |   3 +
  raw-run-output.txt          | Bin 0 -> 7260 bytes
- run-evidence-v3.js          | 311 ++++++++++++++++-----------
- schema-export.txt           | 507 ++++++++++++++++++++++++++++++++++++++++++++
- secret-scan.txt             |  12 ++
- staging-evidence-v3.txt     |  73 +++----
+ run-evidence-v3.js          | 311 +++++++++++++++----------
+ schema-export.txt           | 536 ++++++++++++++++++++++++++++++++++++++++++++
+ secret-scan.txt             |  29 +++
+ staging-evidence-v3.txt     |  73 +++---
  terminal-migrate-deploy.txt | Bin 0 -> 598 bytes
  terminal-migrate-status.txt | Bin 0 -> 592 bytes
  terminal-validate.txt       | Bin 0 -> 278 bytes
- trigger-inventory.txt       | 275 ++++++++++++++++++++++++
- 15 files changed, 1662 insertions(+), 156 deletions(-)
+ trigger-inventory.txt       | 275 +++++++++++++++++++++++
+ 15 files changed, 1711 insertions(+), 156 deletions(-)

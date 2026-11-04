@@ -1,7 +1,7 @@
 === SCHEMA CATALOGUE INVENTORY ===
 NOTE: This is a catalogue query, not a complete pg_dump --schema-only DDL export.
 pg_dump unavailable on this machine; the catalogue output below is the primary artifact.
-Captured: 2026-11-04T17:29:46.319Z
+Captured: 2026-11-04T17:35:29.000Z
 
 ## TABLES AND COLUMNS (31)
 
