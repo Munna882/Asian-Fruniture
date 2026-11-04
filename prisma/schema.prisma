@@ -147,6 +147,7 @@ model User {
   name              String
   role              RoleType  @default(CUSTOMER)
   isActive          Boolean   @default(true)
+  canApproveQc      Boolean   @default(false)
   locationId        String?
   location          Location? @relation(fields: [locationId], references: [id])
   createdAt         DateTime  @default(now())
