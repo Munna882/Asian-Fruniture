@@ -1,0 +1,42 @@
+=== CONNECTED ===
+
+=== APPLYING V2 TRIGGERS ===
+OK: V2 triggers applied
+
+=== SEEDING BASE FIXTURES ===
+OK: Seed committed
+
+=== V1 TESTS (1-5) ===
+[V1] TEST 1 PASSED: Inventory lifecycle correct
+[V1] TEST 2 PASSED: Dispatch blocked for missing obligations
+[V1] TEST 3a PASSED: Refund blocked without allocations
+[V1] TEST 3b PASSED: Refund processed with valid allocations
+[V1] TEST 4 PASSED: Dispatch succeeded with paid obligations
+[V1] TEST 5 PASSED: Financial ledger immutable
+>>> V1: COMPLETED
+[V1] there is no transaction in progress
+
+=== V2 TESTS (6-10) ===
+[V2] TEST 6 PASSED: Raw material RECEIPT/CONSUMPTION/over-consume
+[V2] TEST 7a PASSED: Over-reversal rejected
+[V2] TEST 7b PASSED: ADJUSTMENT requires reference
+[V2] TEST 8 PASSED: Unauthorized QC inspector rejected
+[V2] TEST 9a PASSED: QC requires QC_PENDING state
+[V2] TEST 10a PASSED: Completion blocked by REJECTED latest QC
+[V2] TEST 10b PASSED: Completion allowed after latest PASSED QC
+>>> V2: COMPLETED
+[V2] there is no transaction in progress
+
+=== TRANSFER PAIRING ===
+[UNPAIR] there is no transaction in progress
+>>> XFER-A PASSED: Unpaired transfer rejected
+>>> XFER-B PASSED: Paired transfer committed (A=7, B=3)
+
+=== WRONG-PAYMENT REFUND ===
+>>> WP PASSED: Wrong-payment refund allocation rejected
+
+=== CONCURRENCY ===
+>>> CONC-1 PASSED: Last-unit race — exactly one succeeded
+>>> CONC-2 PASSED: Allocation race — exactly one succeeded
+
+Tables: 31 | Triggers: 20

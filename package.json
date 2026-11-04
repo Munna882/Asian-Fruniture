@@ -6,7 +6,8 @@
         "dev": "next dev --turbopack",
         "build": "next build --turbopack",
         "start": "next start",
-        "lint": "eslint"
+        "lint": "eslint",
+        "test": "vitest run"
     },
     "dependencies": {
         "bcrypt": "^6.0.0",
@@ -14,6 +15,7 @@
         "date-fns": "^4.4.0",
         "next": "15.5.28",
         "next-auth": "^5.0.0-beta.32",
+        "pg": "^8.23.1",
         "react": "19.1.0",
         "react-dom": "19.1.0",
         "zustand": "^5.0.16"
@@ -32,7 +34,8 @@
         "prisma": "^5.22.0",
         "tailwindcss": "^4",
         "ts-node": "^10.9.2",
-        "typescript": "^5"
+        "typescript": "^5",
+        "vitest": "^2.1.8"
     },
     "prisma": {
         "seed": "ts-node prisma/seed.ts"
