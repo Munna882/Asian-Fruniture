@@ -6,7 +6,7 @@ const { execSync } = require('child_process');
   const c = new Client({ connectionString: process.env.DATABASE_URL });
   await c.connect();
 
-  let out = '=== SCHEMA EXPORT ===\n';
+  let out = '=== SCHEMA CATALOGUE INVENTORY ===\n' + 'NOTE: This is a catalogue query, not a complete pg_dump --schema-only DDL export.\n' + 'pg_dump unavailable on this machine; the catalogue output below is the primary artifact.\n';
   out += 'Captured: ' + new Date().toISOString() + '\n\n';
 
   // Tables + columns — FIXED to_regclass (Finding C)
@@ -48,16 +48,36 @@ const { execSync } = require('child_process');
   for (const [tbl, pk] of Object.entries(pkByTable)) out += '  ' + tbl + ' : ' + pk.name + ' (' + pk.cols.join(', ') + ')\n';
   out += '\n';
 
-  // Foreign keys
+  // Foreign keys — position-aware query per reviewer specification
+  // Pairs conkey[i] with confkey[i] using WITH ORDINALITY so composite FKs map correctly.
   const fks = await c.query(`
-    SELECT tc.table_name, tc.constraint_name, kcu.column_name, ccu.table_name AS foreign_table, ccu.column_name AS foreign_column
-    FROM information_schema.table_constraints tc
-    JOIN information_schema.key_column_usage kcu ON tc.constraint_name=kcu.constraint_name AND tc.table_schema=kcu.table_schema
-    JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name=tc.constraint_name AND ccu.table_schema=tc.table_schema
-    WHERE tc.constraint_type='FOREIGN KEY' AND tc.table_schema='public' ORDER BY tc.table_name, tc.constraint_name
+    SELECT
+        src.relname AS table_name,
+        con.conname AS constraint_name,
+        src_att.attname AS column_name,
+        tgt.relname AS foreign_table,
+        tgt_att.attname AS foreign_column,
+        src_cols.ord AS column_position
+    FROM pg_constraint con
+    JOIN pg_class src ON src.oid = con.conrelid
+    JOIN pg_namespace src_ns ON src_ns.oid = src.relnamespace
+    JOIN pg_class tgt ON tgt.oid = con.confrelid
+    JOIN LATERAL unnest(con.conkey) WITH ORDINALITY AS src_cols(attnum, ord) ON TRUE
+    JOIN LATERAL unnest(con.confkey) WITH ORDINALITY AS tgt_cols(attnum, ord) ON tgt_cols.ord = src_cols.ord
+    JOIN pg_attribute src_att ON src_att.attrelid = src.oid AND src_att.attnum = src_cols.attnum
+    JOIN pg_attribute tgt_att ON tgt_att.attrelid = tgt.oid AND tgt_att.attnum = tgt_cols.attnum
+    WHERE con.contype = 'f' AND src_ns.nspname = 'public'
+    ORDER BY src.relname, con.conname, src_cols.ord
   `);
-  out += '## FOREIGN KEYS (' + fks.rows.length + ')\n\n';
-  for (const r of fks.rows) out += '  ' + r.table_name + '.' + r.column_name + ' -> ' + r.foreign_table + '.' + r.foreign_column + ' [' + r.constraint_name + ']\n';
+  out += '## FOREIGN KEYS — column pairs (' + fks.rows.length + ' rows, position-aware)\n\n';
+  let lastCon = '';
+  for (const r of fks.rows) {
+    if (r.constraint_name !== lastCon) {
+      out += '  [' + r.constraint_name + '] ' + r.table_name + '\n';
+      lastCon = r.constraint_name;
+    }
+    out += '    pos ' + r.column_position + ': ' + r.table_name + '.' + r.column_name + ' -> ' + r.foreign_table + '.' + r.foreign_column + '\n';
+  }
   out += '\n';
 
   // Unique constraints
