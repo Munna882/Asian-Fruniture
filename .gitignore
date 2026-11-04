@@ -35,3 +35,6 @@ next-env.d.ts
 
 # prisma
 /prisma/migrations/dev.db
+baseline-db-state.txt
+full-run.txt
+staging-evidence.txt
