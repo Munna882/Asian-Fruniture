@@ -12,6 +12,7 @@ enum RoleType {
   FINANCE_MANAGER
   PRODUCTION_MANAGER
   SHOWROOM_MANAGER
+  CUSTOMER
 }
 
 enum OrderStatus {
@@ -29,14 +30,156 @@ enum PaymentStatus {
   FAILED
 }
 
+enum LocationType {
+  CENTRAL_WAREHOUSE
+  SHOWROOM
+}
+
+enum FulfillmentType {
+  READY_STOCK
+  MADE_TO_ORDER
+}
+
+enum FulfillmentStatus {
+  PENDING
+  AWAITING_QUOTE
+  AWAITING_BALANCE
+  READY_FOR_DISPATCH
+  DISPATCHED
+  CANCELLED
+}
+
+enum ObligationType {
+  DEPOSIT
+  PRODUCT_BALANCE
+  DELIVERY_CHARGE
+}
+
+enum ObligationStatus {
+  PENDING
+  PAID
+  VOID
+}
+
+enum LedgerTransactionType {
+  PAYMENT
+  REFUND
+  ADJUSTMENT
+}
+
+enum StockMovementType {
+  RECEIPT
+  TRANSFER_OUT
+  TRANSFER_IN
+  RESERVATION
+  DISPATCH
+  CANCELLATION
+  RESTOCK
+  ADJUSTMENT
+  OPENING_BALANCE
+}
+
+enum StockLedgerStatus {
+  ACTIVE
+  FULFILLED
+  CANCELLED
+}
+
+enum RawMaterialMovementType {
+  RECEIPT
+  CONSUMPTION
+  REVERSAL
+  ADJUSTMENT
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  PROCESSED
+  REJECTED
+}
+
+enum ProductionStatus {
+  PENDING
+  IN_PROGRESS
+  QC_PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum QCStatus {
+  PASSED
+  REJECTED
+}
+
+enum DeliveryQuoteStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUPERSEDED
+}
+
+enum DeliveryStatus {
+  PENDING
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model SystemConfig {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      RoleType @default(SHOWROOM_MANAGER)
-  createdAt DateTime @default(now())
-  orders    Order[]
+  id                String    @id @default(uuid())
+  email             String    @unique
+  password          String
+  name              String
+  role              RoleType  @default(CUSTOMER)
+  isActive          Boolean   @default(true)
+  locationId        String?
+  location          Location? @relation(fields: [locationId], references: [id])
+  createdAt         DateTime  @default(now())
+  orders            Order[]
+  addresses         CustomerAddress[]
+  approvedQuotes    DeliveryQuote[] @relation("QuoteApprover")
+  refundsApproved   RefundRequest[] @relation("RefundApprover")
+  assignedJobs      ProductionJob[] @relation("JobAssignee")
+  productionHistory ProductionStatusHistory[]
+  qcHistory         ProductionQcHistory[]
+}
+
+model CustomerAddress {
+  id        String  @id @default(uuid())
+  userId    String
+  label     String
+  address   String
+  city      String
+  district  String
+  phone     String
+  isDefault Boolean @default(false)
+  user      User    @relation(fields: [userId], references: [id])
+}
+
+model Location {
+  id               String             @id @default(uuid())
+  name             String             @unique
+  type             LocationType
+  address          String?
+  users            User[]
+  inventory        InventoryStock[]
+  stockLedgers     StockLedger[]
+  rawMaterialStock RawMaterialStock[]
 }
 
 model Category {
@@ -46,54 +189,313 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   name        String
   description String?
+  status      ProductStatus @default(DRAFT)
   categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
+  category    Category      @relation(fields: [categoryId], references: [id])
   variants    ProductVariant[]
   images      ProductImage[]
-  createdAt   DateTime @default(now())
+  boms        BillOfMaterials[]
+  createdAt   DateTime      @default(now())
 }
 
 model ProductImage {
   id        String   @id @default(uuid())
   url       String
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
 
 model ProductVariant {
-  id        String  @id @default(uuid())
-  productId String
-  sku       String  @unique
-  price     BigInt  // G2-A Rule: BIGINT integer poisha
-  stock     Int     @default(0)
-  product   Product @relation(fields: [productId], references: [id])
+  id             String          @id @default(uuid())
+  productId      String
+  sku            String          @unique
+  price          BigInt
+  stock          Int             @default(0)
+  product        Product         @relation(fields: [productId], references: [id])
+  inventory      InventoryStock[]
+  stockMovements StockLedger[]
+  orderItems     OrderItem[]
+}
+
+model InventoryStock {
+  id               String          @id @default(uuid())
+  variantId        String
+  locationId       String
+  quantityOnHand   Int             @default(0)
+  quantityReserved Int             @default(0)
+  variant          ProductVariant  @relation(fields: [variantId], references: [id])
+  location         Location        @relation(fields: [locationId], references: [id])
+  @@unique([variantId, locationId])
+}
+
+model StockLedger {
+  id             String            @id @default(uuid())
+  variantId      String
+  locationId     String
+  orderItemId    String?
+  transferGroupId String?
+  movementType   StockMovementType @map("type")
+  quantity       Int
+  status         StockLedgerStatus @default(ACTIVE)
+  reference      String
+  createdAt      DateTime          @default(now())
+  variant        ProductVariant    @relation(fields: [variantId], references: [id])
+  location       Location          @relation(fields: [locationId], references: [id])
+  orderItem      OrderItem?        @relation(fields: [orderItemId], references: [id])
+  @@unique([reference, movementType, variantId, locationId])
+  @@index([transferGroupId])
+}
+
+model RawMaterial {
+  id      String              @id @default(uuid())
+  name    String
+  unit    String
+  boms    BillOfMaterials[]
+  stock   RawMaterialStock[]
+  ledgers RawMaterialLedger[]
+}
+
+model RawMaterialStock {
+  id              String       @id @default(uuid())
+  rawMaterialId   String
+  locationId      String
+  quantityOnHand  Int          @default(0)
+  rawMaterial     RawMaterial  @relation(fields: [rawMaterialId], references: [id])
+  location        Location     @relation(fields: [locationId], references: [id])
+  @@unique([rawMaterialId, locationId])
+}
+
+model RawMaterialLedger {
+  id              String                  @id @default(uuid())
+  rawMaterialId   String
+  locationId      String
+  movementType    RawMaterialMovementType @map("type")
+  quantity        Int
+  productionJobId String?
+  reversesId      String?
+  reference       String?
+  createdAt       DateTime                @default(now())
+  rawMaterial     RawMaterial             @relation(fields: [rawMaterialId], references: [id])
+  productionJob   ProductionJob?          @relation(fields: [productionJobId], references: [id])
+}
+
+model BillOfMaterials {
+  id               String        @id @default(uuid())
+  productId        String
+  rawMaterialId    String
+  quantityRequired Int
+  version          Int           @default(1)
+  isActive         Boolean       @default(true)
+  product          Product       @relation(fields: [productId], references: [id])
+  rawMaterial      RawMaterial   @relation(fields: [rawMaterialId], references: [id])
+  @@unique([productId, version, rawMaterialId])
+}
+
+model ProductionJob {
+  id           String           @id @default(uuid())
+  orderItemId  String           @unique
+  status       ProductionStatus @default(PENDING)
+  bomSnapshot  Json
+  assignedToId String?
+  createdAt    DateTime         @default(now())
+  orderItem       OrderItem                 @relation(fields: [orderItemId], references: [id])
+  assignedTo      User?                     @relation("JobAssignee", fields: [assignedToId], references: [id])
+  qcHistory       ProductionQcHistory[]
+  materialLedgers RawMaterialLedger[]
+  statusHistory   ProductionStatusHistory[]
+}
+
+model ProductionStatusHistory {
+  id              String           @id @default(uuid())
+  productionJobId String
+  status          ProductionStatus
+  changedById     String
+  createdAt       DateTime         @default(now())
+  productionJob   ProductionJob    @relation(fields: [productionJobId], references: [id])
+  changedBy       User             @relation(fields: [changedById], references: [id])
+}
+
+model ProductionQcHistory {
+  id              String        @id @default(uuid())
+  productionJobId String
+  status          QCStatus
+  rejectionReason String?
+  changedById     String
+  sequenceNumber  Int
+  createdAt       DateTime      @default(now())
+  productionJob   ProductionJob @relation(fields: [productionJobId], references: [id])
+  changedBy       User          @relation(fields: [changedById], references: [id])
+  @@unique([productionJobId, sequenceNumber])
 }
 
 model Order {
   id        String      @id @default(uuid())
   userId    String
-  user      User        @relation(fields: [userId], references: [id])
-  total     BigInt      // G2-A Rule: BIGINT integer poisha
+  total     BigInt      @default(0)
   status    OrderStatus @default(PENDING)
   createdAt DateTime    @default(now())
-  payments  Payment[]
+  user              User               @relation(fields: [userId], references: [id])
+  items             OrderItem[]
+  fulfillmentGroups FulfillmentGroup[]
+  ledgerEntries     FinancialLedger[]
 }
 
-model Payment {
-  id               String        @id @default(uuid())
-  orderId          String
-  order            Order         @relation(fields: [orderId], references: [id])
-  amount           BigInt        // G2-A Rule: BIGINT integer poisha
-  status           PaymentStatus @default(PENDING)
-  idempotencyKey   String        @unique // G2-A Rule: Idempotency
-  isPrimary        Boolean       @default(false)
-  createdAt        DateTime      @default(now())
+model OrderItem {
+  id                 String           @id @default(uuid())
+  orderId            String
+  variantId          String
+  quantity           Int
+  priceAtOrder       BigInt
+  nameAtOrder        String
+  skuAtOrder         String
+  fulfillmentGroupId String
+  createdAt          DateTime         @default(now())
+  order            Order            @relation(fields: [orderId], references: [id])
+  variant          ProductVariant   @relation(fields: [variantId], references: [id])
+  fulfillmentGroup FulfillmentGroup @relation(fields: [fulfillmentGroupId, orderId], references: [id, orderId])
+  productionJob    ProductionJob?
+  stockLedger      StockLedger[]
+}
 
-  @@unique([orderId, isPrimary], name: "unique_primary_payment", map: "unique_primary_payment")
+model FulfillmentGroup {
+  id        String            @id @default(uuid())
+  orderId   String
+  type      FulfillmentType
+  status    FulfillmentStatus @default(PENDING)
+  createdAt DateTime          @default(now())
+  order       Order               @relation(fields: [orderId], references: [id])
+  items       OrderItem[]
+  obligations PaymentObligation[]
+  quotes      DeliveryQuote[]
+  delivery    Delivery?
+  @@unique([id, orderId])
+}
+
+model Delivery {
+  id                 String           @id @default(uuid())
+  fulfillmentGroupId String           @unique
+  status             DeliveryStatus   @default(PENDING)
+  trackingNumber     String?
+  createdAt          DateTime         @default(now())
+  fulfillmentGroup   FulfillmentGroup @relation(fields: [fulfillmentGroupId], references: [id])
+}
+
+model FinancialLedger {
+  id        String               @id @default(uuid())
+  orderId   String
+  type      LedgerTransactionType
+  amount    BigInt
+  reference String               @unique
+  createdAt DateTime             @default(now())
+  order              Order               @relation(fields: [orderId], references: [id])
+  paymentAllocations PaymentAllocation[]
+  originalRefunds    RefundRequest[]     @relation("OriginalLedger")
+  processedRefund    RefundRequest?      @relation("ProcessedRefund")
+  @@unique([id, orderId])
+}
+
+model PaymentObligation {
+  id                 String           @id @default(uuid())
+  orderId            String
+  fulfillmentGroupId String
+  type               ObligationType
+  amount             BigInt
+  status             ObligationStatus @default(PENDING)
+  deliveryQuoteId    String?
+  createdAt          DateTime         @default(now())
+  fulfillmentGroup FulfillmentGroup    @relation(fields: [fulfillmentGroupId, orderId], references: [id, orderId])
+  deliveryQuote    DeliveryQuote?      @relation(fields: [deliveryQuoteId, fulfillmentGroupId], references: [id, fulfillmentGroupId])
+  allocations      PaymentAllocation[]
+  @@unique([id, orderId])
+  @@unique([deliveryQuoteId, fulfillmentGroupId])
+}
+
+model PaymentAllocation {
+  id           String   @id @default(uuid())
+  ledgerId     String
+  obligationId String
+  orderId      String
+  amount       BigInt
+  createdAt    DateTime @default(now())
+  ledger            FinancialLedger   @relation(fields: [ledgerId, orderId], references: [id, orderId])
+  obligation        PaymentObligation @relation(fields: [obligationId, orderId], references: [id, orderId])
+  refundAllocations RefundAllocation[]
+  @@unique([id, orderId])
+  @@unique([id, ledgerId])
+}
+
+model RefundRequest {
+  id                String       @id @default(uuid())
+  originalLedgerId  String
+  amount            BigInt
+  reason            String
+  status            RefundStatus @default(PENDING)
+  processedLedgerId String?      @unique
+  approvedById      String?
+  createdAt         DateTime     @default(now())
+  originalLedger    FinancialLedger   @relation("OriginalLedger", fields: [originalLedgerId], references: [id])
+  processedLedger   FinancialLedger?  @relation("ProcessedRefund", fields: [processedLedgerId], references: [id])
+  approvedBy        User?             @relation("RefundApprover", fields: [approvedById], references: [id])
+  refundAllocations RefundAllocation[]
+  @@unique([id, originalLedgerId])
+}
+
+model RefundAllocation {
+  id                   String   @id @default(uuid())
+  refundRequestId      String
+  originalLedgerId     String
+  originalAllocationId String
+  amount               BigInt
+  createdAt            DateTime @default(now())
+  refundRequest      RefundRequest     @relation(fields: [refundRequestId, originalLedgerId], references: [id, originalLedgerId])
+  originalAllocation PaymentAllocation @relation(fields: [originalAllocationId, originalLedgerId], references: [id, ledgerId])
+  @@unique([refundRequestId, originalAllocationId])
+}
+
+model DeliveryQuote {
+  id                 String              @id @default(uuid())
+  fulfillmentGroupId String
+  version            Int                 @default(1)
+  amount             BigInt
+  status             DeliveryQuoteStatus @default(PENDING)
+  approvedById       String?
+  approvedAt         DateTime?
+  rejectedReason     String?
+  createdAt          DateTime            @default(now())
+  fulfillmentGroup FulfillmentGroup      @relation(fields: [fulfillmentGroupId], references: [id])
+  approvedBy       User?                 @relation("QuoteApprover", fields: [approvedById], references: [id])
+  history          DeliveryQuoteHistory[]
+  obligation       PaymentObligation?
+  @@unique([id, fulfillmentGroupId])
+  @@unique([fulfillmentGroupId, version])
+}
+
+model DeliveryQuoteHistory {
+  id              String              @id @default(uuid())
+  quoteId         String
+  status          DeliveryQuoteStatus
+  rejectionReason String?
+  changedById     String
+  createdAt       DateTime            @default(now())
+  quote           DeliveryQuote       @relation(fields: [quoteId], references: [id])
+}
+
+model LegacyPayment {
+  id             String        @id @default(uuid())
+  orderId        String
+  amount         BigInt
+  status         PaymentStatus @default(PENDING)
+  idempotencyKey String        @unique
+  isPrimary      Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  @@index([orderId, isPrimary])
+  @@map("Payment")
 }
 
 model IdempotencyRecord {
