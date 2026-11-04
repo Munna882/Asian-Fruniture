@@ -1,13 +1,24 @@
 === ENVIRONMENT ===
 PostgreSQL: 18.6 (ac70818)
 Database: neondb
-Git commit: aadf13c2406af0133f59861ac1777dff03ce790f
+Git commit: 3e9a4723fb124ade8b9a59bebe0a0d1fba7aa43c
 Node.js: v22.18.0
 
-=== APPLYING V3 TRIGGERS ===
-OK: V3 triggers applied
+=== TRIGGERS FROM pg_trigger CATALOG ===
+Total distinct triggers (pg_trigger): 11
+  FinancialLedger | trg_immutable_ledger
+  FulfillmentGroup | trg_dispatch
+  PaymentAllocation | trg_immutable_alloc
+  PaymentAllocation | trg_payment_alloc
+  ProductionJob | trg_production_transition
+  ProductionQcHistory | trg_immutable_qc
+  ProductionQcHistory | trg_qc_insert
+  RawMaterialLedger | trg_raw_material
+  RefundRequest | trg_refund_processing
+  StockLedger | trg_inventory
+  StockLedger | trg_transfer_pairing
 
-=== SEEDING ===
+=== SEEDING BASE FIXTURES ===
 OK: Seed committed
 
 === V1 TESTS ===
@@ -30,24 +41,22 @@ OK: Seed committed
 >>> V2: COMPLETED
 
 === TRANSFER PAIRING ===
-[XFER-A] there is no transaction in progress
 >>> XFER-A PASSED: Unpaired transfer rejected
 >>> XFER-B PASSED: Paired transfer committed (A=7, B=3)
-[XFER-C] there is no transaction in progress
 >>> XFER-C PASSED: Mismatched variant rejected
+>>> XFER-D PASSED: Duplicate TRANSFER_OUT rejected
 
 === WRONG-PAYMENT REFUND ===
 >>> WP PASSED: Wrong-payment refund allocation rejected
 
 === CONCURRENCY ===
->>> CONC-1 PASSED: Last-unit race — exactly one succeeded
->>> CONC-2 PASSED: Allocation race — exactly one succeeded
+>>> CONC-1 PASSED: Last-unit race - exactly one succeeded
+>>> CONC-2 PASSED: Allocation race - exactly one succeeded
 
 === FINAL STATS ===
-Tables: 31 | Triggers: 20
-Trigger names: trg_dispatch, trg_immutable_alloc, trg_immutable_ledger, trg_immutable_qc, trg_inventory, trg_payment_alloc, trg_production_transition, trg_qc_insert, trg_raw_material, trg_refund_processing, trg_transfer_pairing
+Tables: 31 | Distinct triggers (pg_trigger): 11
 
 === SUMMARY ===
-Passed: 19
+Passed: 20
 Failed: 0
 Exit code: 0

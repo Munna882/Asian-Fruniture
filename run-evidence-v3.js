@@ -13,7 +13,10 @@ const RUN = Date.now().toString();
 
 async function newClient(label) {
   const c = new Client({ connectionString: CONN });
-  c.on('notice', msg => { if (msg.message.includes('no transaction in progress')) return; say('['' + (label||'N') + '] ' + msg.message);
+  c.on('notice', msg => {
+    if (msg.message.includes('no transaction in progress')) return;
+    if (msg.message.includes('does not exist, skipping')) return;
+    say('[' + (label||'N') + '] ' + msg.message);
     if (msg.message.includes('PASSED')) passed++;
     if (msg.message.includes('FAILED')) failed++;
   });
@@ -25,16 +28,17 @@ async function newClient(label) {
 async function runTest(file, label) {
   const c = await newClient(label);
   try {
-    const content = fs.readFileSync(file, 'utf8').replace(/\{RUN\}/g, RUN); await c.query(content);
+    const content = fs.readFileSync(file, 'utf8').replace(/\{RUN\}/g, RUN);
+    await c.query(content);
     say('>>> ' + label + ': COMPLETED');
   } catch(e) {
-    say('>>> ' + label + ': FAILED — ' + e.message);
+    say('>>> ' + label + ': FAILED - ' + e.message);
     failed++;
   } finally { try { await c.end(); } catch(_) {} }
 }
 
 async function transferPairTest() {
-  // Test A: unpaired rejected
+  // A: unpaired
   const ac = await newClient('XFER-A');
   let aFailed = false, aErr = '';
   try {
@@ -45,13 +49,10 @@ async function transferPairTest() {
     aFailed = true; aErr = e.message;
     try { await ac.query('ROLLBACK'); } catch(_) {}
   } finally { try { await ac.end(); } catch(_) {} }
-
-  if (aFailed && aErr.includes('requires exactly one')) {
-    say('>>> XFER-A PASSED: Unpaired transfer rejected');
-    passed++;
+  if (aFailed && aErr.includes('must have exactly one')) {
+    say('>>> XFER-A PASSED: Unpaired transfer rejected'); passed++;
   } else {
-    say('>>> XFER-A FAILED: ' + (aFailed ? 'wrong error: ' + aErr : 'unpaired succeeded'));
-    failed++;
+    say('>>> XFER-A FAILED: ' + (aFailed ? 'wrong: '+aErr.substring(0,80) : 'unpaired succeeded')); failed++;
   }
 
   // Reset
@@ -60,7 +61,7 @@ async function transferPairTest() {
   await rc.query(`UPDATE "InventoryStock" SET "quantityOnHand"=0,"quantityReserved"=0 WHERE id='is_xfer_b'`);
   try { await rc.end(); } catch(_) {}
 
-  // Test B: paired committed
+  // B: paired
   const pc = await newClient('XFER-B');
   let bFailed = false, bErr = '';
   try {
@@ -75,16 +76,13 @@ async function transferPairTest() {
   const a = bFailed ? {rows:[{quantityOnHand:0}]} : await pc.query(`SELECT "quantityOnHand" FROM "InventoryStock" WHERE id='is_xfer_a'`);
   const b = bFailed ? {rows:[{quantityOnHand:0}]} : await pc.query(`SELECT "quantityOnHand" FROM "InventoryStock" WHERE id='is_xfer_b'`);
   try { await pc.end(); } catch(_) {}
-
   if (!bFailed && a.rows[0].quantityOnHand === 7 && b.rows[0].quantityOnHand === 3) {
-    say('>>> XFER-B PASSED: Paired transfer committed (A=7, B=3)');
-    passed++;
+    say('>>> XFER-B PASSED: Paired transfer committed (A=7, B=3)'); passed++;
   } else {
-    say('>>> XFER-B FAILED: ' + (bFailed ? bErr : 'stock mismatch'));
-    failed++;
+    say('>>> XFER-B FAILED: ' + (bFailed ? bErr.substring(0,80) : 'stock mismatch')); failed++;
   }
 
-  // Test C: mismatched variant
+  // C: mismatched variant
   const mc = await newClient('XFER-C');
   let cFailed = false, cErr = '';
   try {
@@ -96,13 +94,29 @@ async function transferPairTest() {
     cFailed = true; cErr = e.message;
     try { await mc.query('ROLLBACK'); } catch(_) {}
   } finally { try { await mc.end(); } catch(_) {} }
-
-  if (cFailed && (cErr.includes('variant mismatch') || cErr.includes('mismatch variant'))) {
-    say('>>> XFER-C PASSED: Mismatched variant rejected');
-    passed++;
+  if (cFailed && cErr.includes('variant mismatch')) {
+    say('>>> XFER-C PASSED: Mismatched variant rejected'); passed++;
   } else {
-    say('>>> XFER-C FAILED: ' + (cFailed ? 'wrong: ' + cErr : 'mismatched variant succeeded'));
-    failed++;
+    say('>>> XFER-C FAILED: ' + (cFailed ? 'wrong: '+cErr.substring(0,80) : 'mismatched succeeded')); failed++;
+  }
+
+  // D: duplicate TRANSFER_OUT (exact-count enforcement)
+  const dc = await newClient('XFER-D');
+  let dFailed = false, dErr = '';
+  try {
+    await dc.query('BEGIN');
+    await dc.query(`INSERT INTO "StockLedger"(id,"variantId","locationId","transferGroupId","type",quantity,status,reference) VALUES ('xd1_${RUN}','v_xfer','l1','tg_dup_${RUN}','TRANSFER_OUT',-2,'ACTIVE','XD1_${RUN}')`);
+    await dc.query(`INSERT INTO "StockLedger"(id,"variantId","locationId","transferGroupId","type",quantity,status,reference) VALUES ('xd2_${RUN}','v_xfer','l1','tg_dup_${RUN}','TRANSFER_OUT',-2,'ACTIVE','XD2_${RUN}')`);
+    await dc.query(`INSERT INTO "StockLedger"(id,"variantId","locationId","transferGroupId","type",quantity,status,reference) VALUES ('xd3_${RUN}','v_xfer','l2','tg_dup_${RUN}','TRANSFER_IN',2,'ACTIVE','XD3_${RUN}')`);
+    await dc.query('COMMIT');
+  } catch(e) {
+    dFailed = true; dErr = e.message;
+    try { await dc.query('ROLLBACK'); } catch(_) {}
+  } finally { try { await dc.end(); } catch(_) {} }
+  if (dFailed && dErr.includes('exactly one OUT')) {
+    say('>>> XFER-D PASSED: Duplicate TRANSFER_OUT rejected'); passed++;
+  } else {
+    say('>>> XFER-D FAILED: ' + (dFailed ? 'wrong: '+dErr.substring(0,80) : 'duplicate out succeeded')); failed++;
   }
 }
 
@@ -123,22 +137,17 @@ async function wrongPaymentTest() {
     await c.query(`INSERT INTO "FinancialLedger"(id,"orderId","type",amount,reference) VALUES ('fl_wpr_${RUN}','o_wp_${RUN}','REFUND',-5000,'FLWPR_${RUN}')`);
     try {
       await c.query(`INSERT INTO "RefundAllocation"(id,"refundRequestId","originalLedgerId","originalAllocationId",amount) VALUES ('ra_wp_${RUN}','rr_wp_${RUN}','fl_wpa_${RUN}','pa_wpb_${RUN}',5000)`);
-    } catch(e) {
-      opRejected = true; opErr = e.message;
-    }
+    } catch(e) { opRejected = true; opErr = e.message; }
     await c.query('ROLLBACK');
   } catch(e) {
     wpFailed = true; wpErr = e.message;
     try { await c.query('ROLLBACK'); } catch(_) {}
   } finally { try { await c.end(); } catch(_) {} }
-
   if (wpFailed) { say('>>> WP FATAL: ' + wpErr); failed++; return; }
   if (opRejected && opErr.includes('violates foreign key')) {
-    say('>>> WP PASSED: Wrong-payment refund allocation rejected');
-    passed++;
+    say('>>> WP PASSED: Wrong-payment refund allocation rejected'); passed++;
   } else {
-    say('>>> WP FAILED: ' + (opRejected ? 'wrong error: ' + opErr : 'wrong-payment allocation succeeded'));
-    failed++;
+    say('>>> WP FAILED: ' + (opRejected ? 'wrong: '+opErr.substring(0,80) : 'succeeded unexpectedly')); failed++;
   }
 }
 
@@ -151,7 +160,6 @@ async function concLastUnit() {
     await sc.query(`INSERT INTO "FulfillmentGroup"(id,"orderId",type) VALUES ('fg_last_${RUN}','o_last_${RUN}','READY_STOCK')`);
     await sc.query(`INSERT INTO "OrderItem"(id,"orderId","variantId",quantity,"priceAtOrder","nameAtOrder","skuAtOrder","fulfillmentGroupId") VALUES ('oi_last_${RUN}','o_last_${RUN}','v_last_${RUN}',1,1000,'L','SKU_LAST_${RUN}','fg_last_${RUN}')`);
   } finally { try { await sc.end(); } catch(_) {} }
-
   const c1 = await newClient('C1');
   const c2 = await newClient('C2');
   let r1 = '', r2 = '';
@@ -168,13 +176,10 @@ async function concLastUnit() {
     try { await c1.query('ROLLBACK'); } catch(_) {}
     try { await c2.query('ROLLBACK'); } catch(_) {}
   } finally { try { await c1.end(); } catch(_) {} try { await c2.end(); } catch(_) {} }
-
   if ((r1 === 'OK' && r2.startsWith('ERR')) || (r1.startsWith('ERR') && r2 === 'OK')) {
-    say('>>> CONC-1 PASSED: Last-unit race — exactly one succeeded');
-    passed++;
+    say('>>> CONC-1 PASSED: Last-unit race - exactly one succeeded'); passed++;
   } else {
-    say('>>> CONC-1 FAILED: r1=' + r1 + ' r2=' + r2);
-    failed++;
+    say('>>> CONC-1 FAILED: r1=' + r1 + ' r2=' + r2); failed++;
   }
 }
 
@@ -184,7 +189,6 @@ async function concAllocation() {
     await sc.query(`INSERT INTO "FinancialLedger"(id,"orderId","type",amount,reference) VALUES ('fl_race_${RUN}','o_last_${RUN}','PAYMENT',20000,'FLRACE_${RUN}')`);
     await sc.query(`INSERT INTO "PaymentObligation"(id,"orderId","fulfillmentGroupId","type",amount) VALUES ('po_race_${RUN}','o_last_${RUN}','fg_last_${RUN}','PRODUCT_BALANCE',10000)`);
   } finally { try { await sc.end(); } catch(_) {} }
-
   const c1 = await newClient('ALC1');
   const c2 = await newClient('ALC2');
   let r1 = '', r2 = '';
@@ -201,13 +205,10 @@ async function concAllocation() {
     try { await c1.query('ROLLBACK'); } catch(_) {}
     try { await c2.query('ROLLBACK'); } catch(_) {}
   } finally { try { await c1.end(); } catch(_) {} try { await c2.end(); } catch(_) {} }
-
   if ((r1 === 'OK' && r2.startsWith('ERR')) || (r1.startsWith('ERR') && r2 === 'OK')) {
-    say('>>> CONC-2 PASSED: Allocation race — exactly one succeeded');
-    passed++;
+    say('>>> CONC-2 PASSED: Allocation race - exactly one succeeded'); passed++;
   } else {
-    say('>>> CONC-2 FAILED: r1=' + r1 + ' r2=' + r2);
-    failed++;
+    say('>>> CONC-2 FAILED: r1=' + r1 + ' r2=' + r2); failed++;
   }
 }
 
@@ -219,15 +220,17 @@ async function main() {
   say('PostgreSQL: ' + pgVer.rows[0].server_version);
   say('Database: ' + dbName.rows[0].n);
   try { say('Git commit: ' + execSync('git rev-parse HEAD').toString().trim()); } catch(_) { say('Git commit: unavailable'); }
-  try { say('Node.js: ' + process.version); } catch(_) {}
+  say('Node.js: ' + process.version);
   try { await c.end(); } catch(_) {}
 
-  say('\n=== APPLYING V3 TRIGGERS ===');
-  const tc = await newClient('T');
-  say('OK: triggers were installed via prisma migrate deploy');
-  try { await tc.end(); } catch(_) {}
+  say('\n=== TRIGGERS FROM pg_trigger CATALOG ===');
+  const cat = await newClient('CAT');
+  const trigInfo = await cat.query(`SELECT t.tgname AS trigger_name, c.relname AS table_name, pg_get_triggerdef(t.oid) AS def FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND NOT t.tgisinternal ORDER BY c.relname, t.tgname`);
+  say('Total distinct triggers (pg_trigger): ' + trigInfo.rows.length);
+  trigInfo.rows.forEach(r => say('  ' + r.table_name + ' | ' + r.trigger_name));
+  try { await cat.end(); } catch(_) {}
 
-  say('\n=== SEEDING ===');
+  say('\n=== SEEDING BASE FIXTURES ===');
   const sc = await newClient('SEED');
   await sc.query(fs.readFileSync('prisma/seed.sql', 'utf8'));
   say('OK: Seed committed');
@@ -251,11 +254,8 @@ async function main() {
 
   const cc = await newClient('FINAL');
   const t = await cc.query(`SELECT count(*)::int AS n FROM information_schema.tables WHERE table_schema='public'`);
-  const tr = await cc.query(`SELECT count(*)::int AS n FROM information_schema.triggers WHERE trigger_schema='public'`);
-  const trNames = await cc.query(`SELECT DISTINCT trigger_name FROM information_schema.triggers WHERE trigger_schema='public' ORDER BY trigger_name`);
   say('\n=== FINAL STATS ===');
-  say('Tables: ' + t.rows[0].n + ' | Triggers: ' + tr.rows[0].n);
-  say('Trigger names: ' + trNames.rows.map(r => r.trigger_name).join(', '));
+  say('Tables: ' + t.rows[0].n + ' | Distinct triggers (pg_trigger): ' + trigInfo.rows.length);
   try { await cc.end(); } catch(_) {}
 
   say('\n=== SUMMARY ===');
