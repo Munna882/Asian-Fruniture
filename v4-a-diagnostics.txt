@@ -1,0 +1,675 @@
+=============================================================
+PHASE D V4-A — MIGRATION RECONCILIATION INVESTIGATION
+Read-only evidence package
+=============================================================
+
+Generated: 2026-11-05T04:48:14.610Z
+Git HEAD: 528945d2e982010f09b5503dd9c70549e8da2af0
+Git branch: phase-d-v3-evidence
+
+=== 1. VERSIONS ===
+Prisma CLI: prisma                  : 5.22.0 | @prisma/client          : 5.22.0 | Query Engine (Node-API) : libquery-engine 605197351a3c8bdd595af2d2a9bc3025bca48ea2 (at node_modules\@prisma\engines\query_engine-windows.dll.node) | Schema Engine           : schema-engine-cli 605197351a3c8bdd595af2d2a9bc3025bca48ea2 (at node_modules\@prisma\engines\schema-engine-windows.exe) | Schema Wasm             : @prisma/prisma-schema-wasm 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
+Node.js: v22.18.0
+PostgreSQL server: 18.6 (ac70818)
+
+=== 2. PRISMA MIGRATE DIFF --help ===
+
+Compares the database schema from two arbitrary sources, and outputs the differences either as a human-readable summary (by default) or an executable script.
+
+prisma migrate diff is a read-only command that does not write to your datasource(s).
+prisma db execute can be used to execute its --script output.
+
+The command takes a source --from-... and a destination --to-....
+The source and destination must use the same provider,
+e.g. a diff using 2 different providers like PostgreSQL and SQLite is not supported.
+
+It compares the source with the destination to generate a diff. 
+The diff can be interpreted as generating a migration that brings the source schema (from) to the shape of the destination schema (to).
+The default output is a human readable diff, it can be rendered as SQL using `--script` on SQL databases.
+
+See the documentation for more information https://pris.ly/d/migrate-diff
+
+Usage
+
+  $ prisma migrate diff [options]
+
+Options
+
+  -h, --help               Display this help message
+  -o, --output             Writes to a file instead of stdout
+
+From and To inputs (1 `--from-...` and 1 `--to-...` must be provided):
+  --from-url               A datasource URL
+  --to-url
+
+  --from-empty             Flag to assume from or to is an empty datamodel
+  --to-empty
+
+  --from-schema-datamodel  Path to a Prisma schema file, uses the datamodel for the diff
+  --to-schema-datamodel
+
+  --from-schema-datasource Path to a Prisma schema file, uses the datasource url for the diff
+  --to-schema-datasource
+
+  --from-migrations        Path to the Prisma Migrate migrations directory
+  --to-migrations
+
+  --from-local-d1          Automatically locate the local Cloudflare D1 database
+  --to-local-d1
+
+Shadow database (only required if using --from-migrations or --to-migrations):
+  --shadow-database-url    URL for the shadow database
+
+Flags
+
+  --script                 Render a SQL script to stdout instead of the default human readable summary (not supported on MongoDB)
+  --exit-code              Change the exit code behavior to signal if the diff is empty or not (Empty: 0, Error: 1, Not empty: 2). Default behavior is Success: 0, Error: 1.
+
+Examples
+ 
+  From database to database as summary
+    e.g. compare two live databases
+  $ prisma migrate diff \
+    --from-url "$DATABASE_URL" \
+    --to-url "postgresql://login:password@localhost:5432/db2"
+  
+  From a live database to a Prisma datamodel
+    e.g. roll forward after a migration failed in the middle
+  $ prisma migrate diff \
+    --shadow-database-url "$SHADOW_DB" \
+    --from-url "$PROD_DB" \
+    --to-schema-datamodel=next_datamodel.prisma \
+    --script
+  
+  From a live database to a datamodel 
+    e.g. roll backward after a migration failed in the middle
+  $ prisma migrate diff \
+    --shadow-database-url "$SHADOW_DB" \
+    --from-url "$PROD_DB" \
+    --to-schema-datamodel=previous_datamodel.prisma \
+    --script
+
+  From a local D1 database to a datamodel
+  $ prisma migrate diff \
+    --from-local-d1 \
+    --to-schema-datamodel=./prisma/schema.prisma \
+    --script
+
+  From a Prisma datamodel to a local D1 database
+  $ prisma migrate diff \
+    --from-schema-datamodel=./prisma/schema.prisma \
+    --to-local-d1 \
+    --script
+  
+  From a Prisma Migrate `migrations` directory to another database
+    e.g. generate a migration for a hotfix already applied on production
+  $ prisma migrate diff \
+    --shadow-database-url "$SHADOW_DB" \
+    --from-migrations ./migrations \
+    --to-url "$PROD_DB" \
+    --script
+
+  Execute the --script output with `prisma db execute` using bash pipe `|`
+  $ prisma migrate diff \
+    --from-[...] \
+    --to-[...] \
+    --script | prisma db execute --stdin --url="$DATABASE_URL"
+
+  Detect if both sources are in sync, it will exit with exit code 2 if changes are detected
+  $ prisma migrate diff \
+    --exit-code \
+    --from-[...] \
+    --to-[...]
+
+
+
+=== 3. PHYSICAL TABLES IN STAGING ===
+Total: 31
+  BillOfMaterials
+  Category
+  CustomerAddress
+  Delivery
+  DeliveryQuote
+  DeliveryQuoteHistory
+  FinancialLedger
+  FulfillmentGroup
+  IdempotencyRecord
+  InventoryStock
+  Location
+  Order
+  OrderItem
+  Payment
+  PaymentAllocation
+  PaymentObligation
+  Product
+  ProductImage
+  ProductVariant
+  ProductionJob
+  ProductionQcHistory
+  ProductionStatusHistory
+  RawMaterial
+  RawMaterialLedger
+  RawMaterialStock
+  RefundAllocation
+  RefundRequest
+  StockLedger
+  SystemConfig
+  User
+  _prisma_migrations
+
+=== 4. FULL SCHEMA DETAILS (per table) ===
+
+--- TABLE: BillOfMaterials ---
+  COL id | text | NOT NULL
+  COL productId | text | NOT NULL
+  COL rawMaterialId | text | NOT NULL
+  COL quantityRequired | integer | NOT NULL
+  COL version | integer | NOT NULL | DEFAULT 1
+  COL isActive | boolean | NOT NULL | DEFAULT true
+  FOREIGN KEY: BillOfMaterials_productId_fkey (productId)
+  FOREIGN KEY: BillOfMaterials_rawMaterialId_fkey (rawMaterialId)
+  PRIMARY KEY: BillOfMaterials_pkey (id)
+  INDEX BillOfMaterials_pkey: CREATE UNIQUE INDEX "BillOfMaterials_pkey" ON public."BillOfMaterials" USING btree (id)
+  INDEX BillOfMaterials_productId_version_rawMaterialId_key: CREATE UNIQUE INDEX "BillOfMaterials_productId_version_rawMaterialId_key" ON public."BillOfMaterials" USING btree ("productId", version, "rawMaterialId")
+
+--- TABLE: Category ---
+  COL id | text | NOT NULL
+  COL name | text | NOT NULL
+  PRIMARY KEY: Category_pkey (id)
+  INDEX Category_pkey: CREATE UNIQUE INDEX "Category_pkey" ON public."Category" USING btree (id)
+  INDEX Category_name_key: CREATE UNIQUE INDEX "Category_name_key" ON public."Category" USING btree (name)
+
+--- TABLE: CustomerAddress ---
+  COL id | text | NOT NULL
+  COL userId | text | NOT NULL
+  COL label | text | NOT NULL
+  COL address | text | NOT NULL
+  COL city | text | NOT NULL
+  COL district | text | NOT NULL
+  COL phone | text | NOT NULL
+  COL isDefault | boolean | NOT NULL | DEFAULT false
+  FOREIGN KEY: CustomerAddress_userId_fkey (userId)
+  PRIMARY KEY: CustomerAddress_pkey (id)
+  INDEX CustomerAddress_pkey: CREATE UNIQUE INDEX "CustomerAddress_pkey" ON public."CustomerAddress" USING btree (id)
+
+--- TABLE: Delivery ---
+  COL id | text | NOT NULL
+  COL fulfillmentGroupId | text | NOT NULL
+  COL status | USER-DEFINED | NOT NULL | DEFAULT 'PENDING'::"DeliveryStatus"
+  COL trackingNumber | text | NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: Delivery_fulfillmentGroupId_fkey (fulfillmentGroupId)
+  PRIMARY KEY: Delivery_pkey (id)
+  INDEX Delivery_pkey: CREATE UNIQUE INDEX "Delivery_pkey" ON public."Delivery" USING btree (id)
+  INDEX Delivery_fulfillmentGroupId_key: CREATE UNIQUE INDEX "Delivery_fulfillmentGroupId_key" ON public."Delivery" USING btree ("fulfillmentGroupId")
+
+--- TABLE: DeliveryQuote ---
+  COL id | text | NOT NULL
+  COL fulfillmentGroupId | text | NOT NULL
+  COL version | integer | NOT NULL | DEFAULT 1
+  COL amount | bigint | NOT NULL
+  COL status | USER-DEFINED | NOT NULL | DEFAULT 'PENDING'::"DeliveryQuoteStatus"
+  COL approvedById | text | NULL
+  COL approvedAt | timestamp without time zone | NULL
+  COL rejectedReason | text | NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: DeliveryQuote_approvedById_fkey (approvedById)
+  FOREIGN KEY: DeliveryQuote_fulfillmentGroupId_fkey (fulfillmentGroupId)
+  PRIMARY KEY: DeliveryQuote_pkey (id)
+  INDEX DeliveryQuote_pkey: CREATE UNIQUE INDEX "DeliveryQuote_pkey" ON public."DeliveryQuote" USING btree (id)
+  INDEX DeliveryQuote_id_fulfillmentGroupId_key: CREATE UNIQUE INDEX "DeliveryQuote_id_fulfillmentGroupId_key" ON public."DeliveryQuote" USING btree (id, "fulfillmentGroupId")
+  INDEX DeliveryQuote_fulfillmentGroupId_version_key: CREATE UNIQUE INDEX "DeliveryQuote_fulfillmentGroupId_version_key" ON public."DeliveryQuote" USING btree ("fulfillmentGroupId", version)
+
+--- TABLE: DeliveryQuoteHistory ---
+  COL id | text | NOT NULL
+  COL quoteId | text | NOT NULL
+  COL status | USER-DEFINED | NOT NULL
+  COL rejectionReason | text | NULL
+  COL changedById | text | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: DeliveryQuoteHistory_quoteId_fkey (quoteId)
+  PRIMARY KEY: DeliveryQuoteHistory_pkey (id)
+  INDEX DeliveryQuoteHistory_pkey: CREATE UNIQUE INDEX "DeliveryQuoteHistory_pkey" ON public."DeliveryQuoteHistory" USING btree (id)
+
+--- TABLE: FinancialLedger ---
+  COL id | text | NOT NULL
+  COL orderId | text | NOT NULL
+  COL type | USER-DEFINED | NOT NULL
+  COL amount | bigint | NOT NULL
+  COL reference | text | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: FinancialLedger_orderId_fkey (orderId)
+  PRIMARY KEY: FinancialLedger_pkey (id)
+  INDEX FinancialLedger_pkey: CREATE UNIQUE INDEX "FinancialLedger_pkey" ON public."FinancialLedger" USING btree (id)
+  INDEX FinancialLedger_reference_key: CREATE UNIQUE INDEX "FinancialLedger_reference_key" ON public."FinancialLedger" USING btree (reference)
+  INDEX FinancialLedger_id_orderId_key: CREATE UNIQUE INDEX "FinancialLedger_id_orderId_key" ON public."FinancialLedger" USING btree (id, "orderId")
+
+--- TABLE: FulfillmentGroup ---
+  COL id | text | NOT NULL
+  COL orderId | text | NOT NULL
+  COL type | USER-DEFINED | NOT NULL
+  COL status | USER-DEFINED | NOT NULL | DEFAULT 'PENDING'::"FulfillmentStatus"
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: FulfillmentGroup_orderId_fkey (orderId)
+  PRIMARY KEY: FulfillmentGroup_pkey (id)
+  INDEX FulfillmentGroup_pkey: CREATE UNIQUE INDEX "FulfillmentGroup_pkey" ON public."FulfillmentGroup" USING btree (id)
+  INDEX FulfillmentGroup_id_orderId_key: CREATE UNIQUE INDEX "FulfillmentGroup_id_orderId_key" ON public."FulfillmentGroup" USING btree (id, "orderId")
+
+--- TABLE: IdempotencyRecord ---
+  COL id | text | NOT NULL
+  COL key | text | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  PRIMARY KEY: IdempotencyRecord_pkey (id)
+  INDEX IdempotencyRecord_pkey: CREATE UNIQUE INDEX "IdempotencyRecord_pkey" ON public."IdempotencyRecord" USING btree (id)
+  INDEX IdempotencyRecord_key_key: CREATE UNIQUE INDEX "IdempotencyRecord_key_key" ON public."IdempotencyRecord" USING btree (key)
+
+--- TABLE: InventoryStock ---
+  COL id | text | NOT NULL
+  COL variantId | text | NOT NULL
+  COL locationId | text | NOT NULL
+  COL quantityOnHand | integer | NOT NULL | DEFAULT 0
+  COL quantityReserved | integer | NOT NULL | DEFAULT 0
+  FOREIGN KEY: InventoryStock_locationId_fkey (locationId)
+  FOREIGN KEY: InventoryStock_variantId_fkey (variantId)
+  PRIMARY KEY: InventoryStock_pkey (id)
+  INDEX InventoryStock_pkey: CREATE UNIQUE INDEX "InventoryStock_pkey" ON public."InventoryStock" USING btree (id)
+  INDEX InventoryStock_variantId_locationId_key: CREATE UNIQUE INDEX "InventoryStock_variantId_locationId_key" ON public."InventoryStock" USING btree ("variantId", "locationId")
+
+--- TABLE: Location ---
+  COL id | text | NOT NULL
+  COL name | text | NOT NULL
+  COL type | USER-DEFINED | NOT NULL
+  COL address | text | NULL
+  PRIMARY KEY: Location_pkey (id)
+  INDEX Location_pkey: CREATE UNIQUE INDEX "Location_pkey" ON public."Location" USING btree (id)
+  INDEX Location_name_key: CREATE UNIQUE INDEX "Location_name_key" ON public."Location" USING btree (name)
+
+--- TABLE: Order ---
+  COL id | text | NOT NULL
+  COL userId | text | NOT NULL
+  COL total | bigint | NOT NULL | DEFAULT 0
+  COL status | USER-DEFINED | NOT NULL | DEFAULT 'PENDING'::"OrderStatus"
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: Order_userId_fkey (userId)
+  PRIMARY KEY: Order_pkey (id)
+  INDEX Order_pkey: CREATE UNIQUE INDEX "Order_pkey" ON public."Order" USING btree (id)
+
+--- TABLE: OrderItem ---
+  COL id | text | NOT NULL
+  COL orderId | text | NOT NULL
+  COL variantId | text | NOT NULL
+  COL quantity | integer | NOT NULL
+  COL priceAtOrder | bigint | NOT NULL
+  COL nameAtOrder | text | NOT NULL
+  COL skuAtOrder | text | NOT NULL
+  COL fulfillmentGroupId | text | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: OrderItem_fulfillmentGroupId_orderId_fkey (fulfillmentGroupId)
+  FOREIGN KEY: OrderItem_fulfillmentGroupId_orderId_fkey (orderId)
+  FOREIGN KEY: OrderItem_orderId_fkey (orderId)
+  FOREIGN KEY: OrderItem_variantId_fkey (variantId)
+  PRIMARY KEY: OrderItem_pkey (id)
+  INDEX OrderItem_pkey: CREATE UNIQUE INDEX "OrderItem_pkey" ON public."OrderItem" USING btree (id)
+
+--- TABLE: Payment ---
+  COL id | text | NOT NULL
+  COL orderId | text | NOT NULL
+  COL amount | bigint | NOT NULL
+  COL status | USER-DEFINED | NOT NULL | DEFAULT 'PENDING'::"PaymentStatus"
+  COL idempotencyKey | text | NOT NULL
+  COL isPrimary | boolean | NOT NULL | DEFAULT false
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  PRIMARY KEY: Payment_pkey (id)
+  INDEX Payment_pkey: CREATE UNIQUE INDEX "Payment_pkey" ON public."Payment" USING btree (id)
+  INDEX Payment_idempotencyKey_key: CREATE UNIQUE INDEX "Payment_idempotencyKey_key" ON public."Payment" USING btree ("idempotencyKey")
+  INDEX Payment_orderId_isPrimary_idx: CREATE INDEX "Payment_orderId_isPrimary_idx" ON public."Payment" USING btree ("orderId", "isPrimary")
+
+--- TABLE: PaymentAllocation ---
+  COL id | text | NOT NULL
+  COL ledgerId | text | NOT NULL
+  COL obligationId | text | NOT NULL
+  COL orderId | text | NOT NULL
+  COL amount | bigint | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: PaymentAllocation_ledgerId_orderId_fkey (ledgerId)
+  FOREIGN KEY: PaymentAllocation_ledgerId_orderId_fkey (orderId)
+  FOREIGN KEY: PaymentAllocation_obligationId_orderId_fkey (obligationId)
+  FOREIGN KEY: PaymentAllocation_obligationId_orderId_fkey (orderId)
+  PRIMARY KEY: PaymentAllocation_pkey (id)
+  INDEX PaymentAllocation_pkey: CREATE UNIQUE INDEX "PaymentAllocation_pkey" ON public."PaymentAllocation" USING btree (id)
+  INDEX PaymentAllocation_id_orderId_key: CREATE UNIQUE INDEX "PaymentAllocation_id_orderId_key" ON public."PaymentAllocation" USING btree (id, "orderId")
+  INDEX PaymentAllocation_id_ledgerId_key: CREATE UNIQUE INDEX "PaymentAllocation_id_ledgerId_key" ON public."PaymentAllocation" USING btree (id, "ledgerId")
+
+--- TABLE: PaymentObligation ---
+  COL id | text | NOT NULL
+  COL orderId | text | NOT NULL
+  COL fulfillmentGroupId | text | NOT NULL
+  COL type | USER-DEFINED | NOT NULL
+  COL amount | bigint | NOT NULL
+  COL status | USER-DEFINED | NOT NULL | DEFAULT 'PENDING'::"ObligationStatus"
+  COL deliveryQuoteId | text | NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey (deliveryQuoteId)
+  FOREIGN KEY: PaymentObligation_deliveryQuoteId_fulfillmentGroupId_fkey (fulfillmentGroupId)
+  FOREIGN KEY: PaymentObligation_fulfillmentGroupId_orderId_fkey (fulfillmentGroupId)
+  FOREIGN KEY: PaymentObligation_fulfillmentGroupId_orderId_fkey (orderId)
+  PRIMARY KEY: PaymentObligation_pkey (id)
+  INDEX PaymentObligation_pkey: CREATE UNIQUE INDEX "PaymentObligation_pkey" ON public."PaymentObligation" USING btree (id)
+  INDEX PaymentObligation_id_orderId_key: CREATE UNIQUE INDEX "PaymentObligation_id_orderId_key" ON public."PaymentObligation" USING btree (id, "orderId")
+  INDEX PaymentObligation_deliveryQuoteId_fulfillmentGroupId_key: CREATE UNIQUE INDEX "PaymentObligation_deliveryQuoteId_fulfillmentGroupId_key" ON public."PaymentObligation" USING btree ("deliveryQuoteId", "fulfillmentGroupId")
+
+--- TABLE: Product ---
+  COL id | text | NOT NULL
+  COL name | text | NOT NULL
+  COL description | text | NULL
+  COL categoryId | text | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  COL status | USER-DEFINED | NOT NULL | DEFAULT 'DRAFT'::"ProductStatus"
+  FOREIGN KEY: Product_categoryId_fkey (categoryId)
+  PRIMARY KEY: Product_pkey (id)
+  INDEX Product_pkey: CREATE UNIQUE INDEX "Product_pkey" ON public."Product" USING btree (id)
+
+--- TABLE: ProductImage ---
+  COL id | text | NOT NULL
+  COL url | text | NOT NULL
+  COL productId | text | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  COL isPrimary | boolean | NOT NULL | DEFAULT false
+  COL sortOrder | integer | NOT NULL | DEFAULT 0
+  FOREIGN KEY: ProductImage_productId_fkey (productId)
+  PRIMARY KEY: ProductImage_pkey (id)
+  INDEX ProductImage_pkey: CREATE UNIQUE INDEX "ProductImage_pkey" ON public."ProductImage" USING btree (id)
+
+--- TABLE: ProductVariant ---
+  COL id | text | NOT NULL
+  COL productId | text | NOT NULL
+  COL sku | text | NOT NULL
+  COL price | bigint | NOT NULL
+  COL stock | integer | NOT NULL | DEFAULT 0
+  FOREIGN KEY: ProductVariant_productId_fkey (productId)
+  PRIMARY KEY: ProductVariant_pkey (id)
+  INDEX ProductVariant_pkey: CREATE UNIQUE INDEX "ProductVariant_pkey" ON public."ProductVariant" USING btree (id)
+  INDEX ProductVariant_sku_key: CREATE UNIQUE INDEX "ProductVariant_sku_key" ON public."ProductVariant" USING btree (sku)
+
+--- TABLE: ProductionJob ---
+  COL id | text | NOT NULL
+  COL orderItemId | text | NOT NULL
+  COL status | USER-DEFINED | NOT NULL | DEFAULT 'PENDING'::"ProductionStatus"
+  COL bomSnapshot | jsonb | NOT NULL
+  COL assignedToId | text | NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: ProductionJob_assignedToId_fkey (assignedToId)
+  FOREIGN KEY: ProductionJob_orderItemId_fkey (orderItemId)
+  PRIMARY KEY: ProductionJob_pkey (id)
+  INDEX ProductionJob_pkey: CREATE UNIQUE INDEX "ProductionJob_pkey" ON public."ProductionJob" USING btree (id)
+  INDEX ProductionJob_orderItemId_key: CREATE UNIQUE INDEX "ProductionJob_orderItemId_key" ON public."ProductionJob" USING btree ("orderItemId")
+
+--- TABLE: ProductionQcHistory ---
+  COL id | text | NOT NULL
+  COL productionJobId | text | NOT NULL
+  COL status | USER-DEFINED | NOT NULL
+  COL rejectionReason | text | NULL
+  COL changedById | text | NOT NULL
+  COL sequenceNumber | integer | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: ProductionQcHistory_changedById_fkey (changedById)
+  FOREIGN KEY: ProductionQcHistory_productionJobId_fkey (productionJobId)
+  PRIMARY KEY: ProductionQcHistory_pkey (id)
+  INDEX ProductionQcHistory_pkey: CREATE UNIQUE INDEX "ProductionQcHistory_pkey" ON public."ProductionQcHistory" USING btree (id)
+  INDEX ProductionQcHistory_productionJobId_sequenceNumber_key: CREATE UNIQUE INDEX "ProductionQcHistory_productionJobId_sequenceNumber_key" ON public."ProductionQcHistory" USING btree ("productionJobId", "sequenceNumber")
+
+--- TABLE: ProductionStatusHistory ---
+  COL id | text | NOT NULL
+  COL productionJobId | text | NOT NULL
+  COL status | USER-DEFINED | NOT NULL
+  COL changedById | text | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: ProductionStatusHistory_changedById_fkey (changedById)
+  FOREIGN KEY: ProductionStatusHistory_productionJobId_fkey (productionJobId)
+  PRIMARY KEY: ProductionStatusHistory_pkey (id)
+  INDEX ProductionStatusHistory_pkey: CREATE UNIQUE INDEX "ProductionStatusHistory_pkey" ON public."ProductionStatusHistory" USING btree (id)
+
+--- TABLE: RawMaterial ---
+  COL id | text | NOT NULL
+  COL name | text | NOT NULL
+  COL unit | text | NOT NULL
+  PRIMARY KEY: RawMaterial_pkey (id)
+  INDEX RawMaterial_pkey: CREATE UNIQUE INDEX "RawMaterial_pkey" ON public."RawMaterial" USING btree (id)
+
+--- TABLE: RawMaterialLedger ---
+  COL id | text | NOT NULL
+  COL rawMaterialId | text | NOT NULL
+  COL locationId | text | NOT NULL
+  COL type | USER-DEFINED | NOT NULL
+  COL quantity | integer | NOT NULL
+  COL productionJobId | text | NULL
+  COL reversesId | text | NULL
+  COL reference | text | NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  COL approvedById | text | NULL
+  COL reason | text | NULL
+  FOREIGN KEY: RawMaterialLedger_productionJobId_fkey (productionJobId)
+  FOREIGN KEY: RawMaterialLedger_rawMaterialId_fkey (rawMaterialId)
+  PRIMARY KEY: RawMaterialLedger_pkey (id)
+  INDEX RawMaterialLedger_pkey: CREATE UNIQUE INDEX "RawMaterialLedger_pkey" ON public."RawMaterialLedger" USING btree (id)
+
+--- TABLE: RawMaterialStock ---
+  COL id | text | NOT NULL
+  COL rawMaterialId | text | NOT NULL
+  COL locationId | text | NOT NULL
+  COL quantityOnHand | integer | NOT NULL | DEFAULT 0
+  FOREIGN KEY: RawMaterialStock_locationId_fkey (locationId)
+  FOREIGN KEY: RawMaterialStock_rawMaterialId_fkey (rawMaterialId)
+  PRIMARY KEY: RawMaterialStock_pkey (id)
+  INDEX RawMaterialStock_pkey: CREATE UNIQUE INDEX "RawMaterialStock_pkey" ON public."RawMaterialStock" USING btree (id)
+  INDEX RawMaterialStock_rawMaterialId_locationId_key: CREATE UNIQUE INDEX "RawMaterialStock_rawMaterialId_locationId_key" ON public."RawMaterialStock" USING btree ("rawMaterialId", "locationId")
+
+--- TABLE: RefundAllocation ---
+  COL id | text | NOT NULL
+  COL refundRequestId | text | NOT NULL
+  COL originalLedgerId | text | NOT NULL
+  COL originalAllocationId | text | NOT NULL
+  COL amount | bigint | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: RefundAllocation_originalAllocationId_originalLedgerId_fkey (originalAllocationId)
+  FOREIGN KEY: RefundAllocation_originalAllocationId_originalLedgerId_fkey (originalLedgerId)
+  FOREIGN KEY: RefundAllocation_refundRequestId_originalLedgerId_fkey (refundRequestId)
+  FOREIGN KEY: RefundAllocation_refundRequestId_originalLedgerId_fkey (originalLedgerId)
+  PRIMARY KEY: RefundAllocation_pkey (id)
+  INDEX RefundAllocation_pkey: CREATE UNIQUE INDEX "RefundAllocation_pkey" ON public."RefundAllocation" USING btree (id)
+  INDEX RefundAllocation_refundRequestId_originalAllocationId_key: CREATE UNIQUE INDEX "RefundAllocation_refundRequestId_originalAllocationId_key" ON public."RefundAllocation" USING btree ("refundRequestId", "originalAllocationId")
+
+--- TABLE: RefundRequest ---
+  COL id | text | NOT NULL
+  COL originalLedgerId | text | NOT NULL
+  COL amount | bigint | NOT NULL
+  COL reason | text | NOT NULL
+  COL status | USER-DEFINED | NOT NULL | DEFAULT 'PENDING'::"RefundStatus"
+  COL processedLedgerId | text | NULL
+  COL approvedById | text | NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: RefundRequest_approvedById_fkey (approvedById)
+  FOREIGN KEY: RefundRequest_originalLedgerId_fkey (originalLedgerId)
+  FOREIGN KEY: RefundRequest_processedLedgerId_fkey (processedLedgerId)
+  PRIMARY KEY: RefundRequest_pkey (id)
+  INDEX RefundRequest_pkey: CREATE UNIQUE INDEX "RefundRequest_pkey" ON public."RefundRequest" USING btree (id)
+  INDEX RefundRequest_processedLedgerId_key: CREATE UNIQUE INDEX "RefundRequest_processedLedgerId_key" ON public."RefundRequest" USING btree ("processedLedgerId")
+  INDEX RefundRequest_id_originalLedgerId_key: CREATE UNIQUE INDEX "RefundRequest_id_originalLedgerId_key" ON public."RefundRequest" USING btree (id, "originalLedgerId")
+
+--- TABLE: StockLedger ---
+  COL id | text | NOT NULL
+  COL variantId | text | NOT NULL
+  COL locationId | text | NOT NULL
+  COL orderItemId | text | NULL
+  COL transferGroupId | text | NULL
+  COL type | USER-DEFINED | NOT NULL
+  COL quantity | integer | NOT NULL
+  COL status | USER-DEFINED | NOT NULL | DEFAULT 'ACTIVE'::"StockLedgerStatus"
+  COL reference | text | NOT NULL
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  FOREIGN KEY: StockLedger_locationId_fkey (locationId)
+  FOREIGN KEY: StockLedger_orderItemId_fkey (orderItemId)
+  FOREIGN KEY: StockLedger_variantId_fkey (variantId)
+  PRIMARY KEY: StockLedger_pkey (id)
+  INDEX StockLedger_pkey: CREATE UNIQUE INDEX "StockLedger_pkey" ON public."StockLedger" USING btree (id)
+  INDEX StockLedger_transferGroupId_idx: CREATE INDEX "StockLedger_transferGroupId_idx" ON public."StockLedger" USING btree ("transferGroupId")
+  INDEX StockLedger_reference_type_variantId_locationId_key: CREATE UNIQUE INDEX "StockLedger_reference_type_variantId_locationId_key" ON public."StockLedger" USING btree (reference, type, "variantId", "locationId")
+
+--- TABLE: SystemConfig ---
+  COL id | text | NOT NULL
+  COL key | text | NOT NULL
+  COL value | text | NOT NULL
+  COL description | text | NULL
+  COL updatedAt | timestamp without time zone | NOT NULL
+  PRIMARY KEY: SystemConfig_pkey (id)
+  INDEX SystemConfig_pkey: CREATE UNIQUE INDEX "SystemConfig_pkey" ON public."SystemConfig" USING btree (id)
+  INDEX SystemConfig_key_key: CREATE UNIQUE INDEX "SystemConfig_key_key" ON public."SystemConfig" USING btree (key)
+
+--- TABLE: User ---
+  COL id | text | NOT NULL
+  COL email | text | NOT NULL
+  COL password | text | NOT NULL
+  COL name | text | NOT NULL
+  COL role | USER-DEFINED | NOT NULL | DEFAULT 'CUSTOMER'::"RoleType"
+  COL createdAt | timestamp without time zone | NOT NULL | DEFAULT CURRENT_TIMESTAMP
+  COL isActive | boolean | NOT NULL | DEFAULT true
+  COL locationId | text | NULL
+  COL canApproveQc | boolean | NOT NULL | DEFAULT false
+  FOREIGN KEY: User_locationId_fkey (locationId)
+  PRIMARY KEY: User_pkey (id)
+  INDEX User_pkey: CREATE UNIQUE INDEX "User_pkey" ON public."User" USING btree (id)
+  INDEX User_email_key: CREATE UNIQUE INDEX "User_email_key" ON public."User" USING btree (email)
+
+--- TABLE: _prisma_migrations ---
+  COL id | character varying(36) | NOT NULL
+  COL checksum | character varying(64) | NOT NULL
+  COL finished_at | timestamp with time zone | NULL
+  COL migration_name | character varying(255) | NOT NULL
+  COL logs | text | NULL
+  COL rolled_back_at | timestamp with time zone | NULL
+  COL started_at | timestamp with time zone | NOT NULL | DEFAULT now()
+  COL applied_steps_count | integer | NOT NULL | DEFAULT 0
+  PRIMARY KEY: _prisma_migrations_pkey (id)
+  INDEX _prisma_migrations_pkey: CREATE UNIQUE INDEX _prisma_migrations_pkey ON public._prisma_migrations USING btree (id)
+
+=== 5. PRODUCT.IMAGEURL COLUMN CHECK ===
+Product.imageUrl: DOES NOT EXIST in physical database
+
+=== 6. PRODUCTIMAGE ROW COUNT ===
+ProductImage rows: 3
+
+=== 7. PAYMENT TABLE CONSTRAINTS ===
+  Payment_amount_not_null: NOT NULL amount
+  Payment_createdAt_not_null: NOT NULL "createdAt"
+  Payment_id_not_null: NOT NULL id
+  Payment_idempotencyKey_not_null: NOT NULL "idempotencyKey"
+  Payment_isPrimary_not_null: NOT NULL "isPrimary"
+  Payment_orderId_not_null: NOT NULL "orderId"
+  Payment_pkey: PRIMARY KEY (id)
+  Payment_status_not_null: NOT NULL status
+  INDEX Payment_pkey: CREATE UNIQUE INDEX "Payment_pkey" ON public."Payment" USING btree (id)
+  INDEX Payment_idempotencyKey_key: CREATE UNIQUE INDEX "Payment_idempotencyKey_key" ON public."Payment" USING btree ("idempotencyKey")
+  INDEX Payment_orderId_isPrimary_idx: CREATE INDEX "Payment_orderId_isPrimary_idx" ON public."Payment" USING btree ("orderId", "isPrimary")
+
+=== 8. ROLE TYPE ENUM VALUES ===
+  SUPER_ADMIN
+  FINANCE_MANAGER
+  PRODUCTION_MANAGER
+  SHOWROOM_MANAGER
+  CUSTOMER
+
+=== 9. TRIGGERS + FUNCTIONS ===
+Total triggers: 11
+  FinancialLedger | trg_immutable_ledger | fn=prevent_financial_mod
+    CREATE TRIGGER trg_immutable_ledger BEFORE DELETE OR UPDATE ON public."FinancialLedger" FOR EACH ROW EXECUTE FUNCTION prevent_financial_mod()
+  FulfillmentGroup | trg_dispatch | fn=check_dispatch_guard
+    CREATE TRIGGER trg_dispatch BEFORE INSERT OR UPDATE ON public."FulfillmentGroup" FOR EACH ROW EXECUTE FUNCTION check_dispatch_guard()
+  PaymentAllocation | trg_immutable_alloc | fn=prevent_financial_mod
+    CREATE TRIGGER trg_immutable_alloc BEFORE DELETE OR UPDATE ON public."PaymentAllocation" FOR EACH ROW EXECUTE FUNCTION prevent_financial_mod()
+  PaymentAllocation | trg_payment_alloc | fn=check_payment_allocation
+    CREATE TRIGGER trg_payment_alloc BEFORE INSERT ON public."PaymentAllocation" FOR EACH ROW EXECUTE FUNCTION check_payment_allocation()
+  ProductionJob | trg_production_transition | fn=check_production_transition
+    CREATE TRIGGER trg_production_transition BEFORE INSERT OR UPDATE ON public."ProductionJob" FOR EACH ROW EXECUTE FUNCTION check_production_transition()
+  ProductionQcHistory | trg_immutable_qc | fn=prevent_financial_mod
+    CREATE TRIGGER trg_immutable_qc BEFORE DELETE OR UPDATE ON public."ProductionQcHistory" FOR EACH ROW EXECUTE FUNCTION prevent_financial_mod()
+  ProductionQcHistory | trg_qc_insert | fn=check_qc_insert
+    CREATE TRIGGER trg_qc_insert BEFORE INSERT ON public."ProductionQcHistory" FOR EACH ROW EXECUTE FUNCTION check_qc_insert()
+  RawMaterialLedger | trg_raw_material | fn=manage_raw_material
+    CREATE TRIGGER trg_raw_material BEFORE INSERT OR DELETE OR UPDATE ON public."RawMaterialLedger" FOR EACH ROW EXECUTE FUNCTION manage_raw_material()
+  RefundRequest | trg_refund_processing | fn=check_refund_processing
+    CREATE TRIGGER trg_refund_processing BEFORE UPDATE ON public."RefundRequest" FOR EACH ROW EXECUTE FUNCTION check_refund_processing()
+  StockLedger | trg_inventory | fn=manage_inventory_lifecycle
+    CREATE TRIGGER trg_inventory BEFORE INSERT OR DELETE OR UPDATE ON public."StockLedger" FOR EACH ROW EXECUTE FUNCTION manage_inventory_lifecycle()
+  StockLedger | trg_transfer_pairing | fn=check_transfer_pairing
+    CREATE CONSTRAINT TRIGGER trg_transfer_pairing AFTER INSERT ON public."StockLedger" DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_transfer_pairing()
+
+Custom functions: 9
+  check_dispatch_guard
+  check_payment_allocation
+  check_production_transition
+  check_qc_insert
+  check_refund_processing
+  check_transfer_pairing
+  manage_inventory_lifecycle
+  manage_raw_material
+  prevent_financial_mod
+
+=== 10. _prisma_migrations TABLE ===
+Applied migrations: 6
+  20261103083925_init_g2a_foundation | steps=1 | finished=Tue Nov 03 2026 14:39:27 GMT+0600 (Bangladesh Standard Time)
+  20261103152933_add_image_field | steps=1 | finished=Tue Nov 03 2026 21:29:37 GMT+0600 (Bangladesh Standard Time)
+  20261103154119_add_product_gallery | steps=1 | finished=Tue Nov 03 2026 21:41:22 GMT+0600 (Bangladesh Standard Time)
+  20261104000000_phase_d_final | steps=0 | finished=null
+  20261104000000_phase_d_final | steps=0 | finished=Wed Nov 04 2026 21:33:23 GMT+0600 (Bangladesh Standard Time)
+  20261104120000_phase_d_v3_triggers | steps=1 | finished=Wed Nov 04 2026 21:34:21 GMT+0600 (Bangladesh Standard Time)
+
+=== 11. MIGRATION FILES ON DISK ===
+Migration directories: 5
+  20261103083925_init_g2a_foundation
+  20261103152933_add_image_field
+  20261103154119_add_product_gallery
+  20261104000000_phase_d_final
+  20261104120000_phase_d_v3_triggers
+
+=== 12. RECONCILIATION MATRIX (auto-generated) ===
+(Format: Prisma model | exists in staging | created by migration?)
+
+Prisma models: 30
+Tables created by migrations: 10
+
+MODEL | IN_STAGING | IN_MIGRATION | SOURCE
+------|------------|--------------|-------
+SystemConfig | YES | NO | UNKNOWN - NOT FROM MIGRATION
+User | YES | YES | MIGRATION
+CustomerAddress | YES | NO | UNKNOWN - NOT FROM MIGRATION
+Location | YES | NO | UNKNOWN - NOT FROM MIGRATION
+Category | YES | YES | MIGRATION
+Product | YES | YES | MIGRATION
+ProductImage | YES | YES | MIGRATION
+ProductVariant | YES | YES | MIGRATION
+InventoryStock | YES | NO | UNKNOWN - NOT FROM MIGRATION
+StockLedger | YES | NO | UNKNOWN - NOT FROM MIGRATION
+RawMaterial | YES | NO | UNKNOWN - NOT FROM MIGRATION
+RawMaterialStock | YES | NO | UNKNOWN - NOT FROM MIGRATION
+RawMaterialLedger | YES | NO | UNKNOWN - NOT FROM MIGRATION
+BillOfMaterials | YES | NO | UNKNOWN - NOT FROM MIGRATION
+ProductionJob | YES | NO | UNKNOWN - NOT FROM MIGRATION
+ProductionStatusHistory | YES | NO | UNKNOWN - NOT FROM MIGRATION
+ProductionQcHistory | YES | NO | UNKNOWN - NOT FROM MIGRATION
+Order | YES | YES | MIGRATION
+OrderItem | YES | NO | UNKNOWN - NOT FROM MIGRATION
+FulfillmentGroup | YES | NO | UNKNOWN - NOT FROM MIGRATION
+Delivery | YES | NO | UNKNOWN - NOT FROM MIGRATION
+FinancialLedger | YES | NO | UNKNOWN - NOT FROM MIGRATION
+PaymentObligation | YES | YES | MIGRATION
+PaymentAllocation | YES | NO | UNKNOWN - NOT FROM MIGRATION
+RefundRequest | YES | NO | UNKNOWN - NOT FROM MIGRATION
+RefundAllocation | YES | NO | UNKNOWN - NOT FROM MIGRATION
+DeliveryQuote | YES | YES | MIGRATION
+DeliveryQuoteHistory | YES | NO | UNKNOWN - NOT FROM MIGRATION
+LegacyPayment | YES | YES | MIGRATION
+IdempotencyRecord | YES | YES | MIGRATION
+
+=============================================================
+END OF V4-A DIAGNOSTIC EVIDENCE
+=============================================================
