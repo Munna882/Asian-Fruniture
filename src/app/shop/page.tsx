@@ -6,6 +6,7 @@ import Link from "next/link";
 export default async function ShopPage() {
   // Fetch live products from the database
   const products = await prisma.product.findMany({
+    where: { status: "PUBLISHED" },
     include: {
       category: true,
       variants: true,

@@ -1,12 +1,22 @@
 ﻿import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import AdminSidebar from "@/components/AdminSidebar"
+import { prisma } from "@/lib/prisma"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
   // Extra layer of security (Middleware should catch this, but double-check)
-  if (!session?.user) {
+  const actorId = (session?.user as { id?: string } | undefined)?.id;
+  if (!actorId) redirect("/login");
+
+  const actor = await prisma.user.findUnique({
+    where: { id: actorId },
+    select: { role: true, isActive: true },
+  });
+  // A customer session cannot access administrative pages.
+  // Specific staff operations must still enforce their own server-side RBAC.
+  if (!actor?.isActive || actor.role === "CUSTOMER") {
     redirect("/login");
   }
 
