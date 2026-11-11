@@ -13,7 +13,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params;
   const product = await prisma.product.findUnique({
-    where: { id: resolvedParams.id },
+    where: { id: resolvedParams.id, status: "PUBLISHED" },
     select: { name: true, description: true }
   });
 
@@ -32,7 +32,7 @@ export default async function ProductDetailPage({ params }: Props) {
   const resolvedParams = await params;
   
   const product = await prisma.product.findUnique({
-    where: { id: resolvedParams.id },
+    where: { id: resolvedParams.id, status: "PUBLISHED" },
     include: {
       category: true,
       variants: true,
@@ -108,7 +108,7 @@ export default async function ProductDetailPage({ params }: Props) {
               <strong>SKU:</strong> {baseVariant?.sku || "N/A"}
             </div>
             <div className="border-b border-[var(--brand-border)] py-4 text-sm text-[var(--brand-muted)]">
-              <strong>Availability:</strong> {stock > 0 ? `${stock} in stock` : "Out of stock"}
+              <strong>Availability:</strong> {stock > 0 ? "Available for enquiry" : "Contact showroom for availability"}
             </div>
           </div>
         </div>
