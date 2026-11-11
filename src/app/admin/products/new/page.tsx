@@ -69,7 +69,7 @@ export default async function NewProductPage() {
         <div>
           <label htmlFor="price" className="mb-2 block text-sm font-semibold">Approved price (BDT) *</label>
           <input id="price" name="price" type="text" inputMode="decimal"
-            pattern="[0-9]+(\\.[0-9]{1,2})?" required className="w-full border border-gray-300 p-3"
+            pattern="[0-9]+([.][0-9]{1,2})?" required className="w-full border border-gray-300 p-3"
             placeholder="45000.00" />
           <p className="mt-1 text-xs text-gray-600">The server converts decimal BDT to integer poisha exactly.</p>
         </div>
