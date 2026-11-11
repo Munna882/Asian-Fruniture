@@ -22,7 +22,7 @@ function parsePoisha(value: FormDataEntryValue | null): bigint {
   if (typeof value !== "string") throw new Error("Price is required");
   const price = value.trim();
   // Exact decimal-to-integer conversion; never use floating-point for money.
-  if (!/^(?:0|[1-9][0-9]{0,8})(?:\\.[0-9]{1,2})?$/.test(price)) {
+  if (!/^(?:0|[1-9][0-9]{0,8})(?:[.][0-9]{1,2})?$/.test(price)) {
     throw new Error("Enter a valid BDT price with at most two decimal places");
   }
   const [whole, fractional = ""] = price.split(".");
