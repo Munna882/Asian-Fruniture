@@ -1,16 +1,17 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
 
-const prisma = new PrismaClient();
 
-export default async function CategoryPage({ params }: { params: { category: string } }) {
-  const categoryName = params.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
+  const { category } = await params;
+  const categoryName = category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
   // Fetch products for this specific category from DB
   const products = await prisma.product.findMany({
     where: {
+      status: "PUBLISHED",
       category: {
         name: categoryName
       }
